@@ -1,10 +1,9 @@
-import logo from './logo.svg';
 import './App.css';
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
-import {Auth, Storage} from 'aws-amplify';
+import {Auth} from 'aws-amplify';
 import S3Upload from "./Components/S3Upload";
-import TableComponent from "./Components/TableComponent";
+import S3Table from "./Components/S3Table";
 
 class App extends Component {
   constructor(props){
@@ -29,7 +28,7 @@ class App extends Component {
         <AmplifySignOut />
         <S3Upload />
         <br/>
-        <TableComponent />
+        <S3Table />
       </div>
     )
   }

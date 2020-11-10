@@ -35,10 +35,9 @@ class S3Upload extends Component {
         let info;
         const [, , , extension] = /([^.]+)(\.(\w+))?$/.exec(fileName);
         console.log("Extension is ", extension);
-        // const extension = fileName.slice(fileName.indexOf('.')+1);
         const mimeType = fileName.slice(fileName.indexOf('.')+1);
         const key = `${keyName}${extension && '.'}${extension}`;
-
+        document.getElementById("submit-btn").className = "ui disabled loading button";
         Storage.put(key, file, {
             level: visibility,
         }).then(
@@ -58,6 +57,7 @@ class S3Upload extends Component {
             }
         ).then(() => {
             console.log("Finished uploading");
+            document.getElementById("submit-btn").className = "ui button";   
         });
     }
 
@@ -65,12 +65,21 @@ class S3Upload extends Component {
         //const isSubmitEnabled = this.state.file !== undefined;
         return (
             <div className="S3Upload">
-                <input id="fileUpload" type="file" />
-                <label for="pages">Pages (seperate with commas):</label>
-                <input id="pages" type="text"/>
-                <label for="confidence">Confidence (0-100): </label>
-                <input type="number" id="confidence" min="0" max="100" value={this.state.confidence} label="Confidence (0-100)" onChange={this.handleChange} />
-                <button type="submit" onClick={this.handleSubmit}>Add File</button>
+                <div class="ui divided list">
+                    <label for="fileUpload">Upload File (pdf, png, or jpg format only)</label>
+                    <div class="ui input">
+                        <input id="fileUpload" type="file" />
+                    </div>
+                    <label for="pages">Pages (seperated with commas)</label>
+                    <div class="ui input">
+                        <input id="pages" type="text"/>
+                    </div>
+                    <label for="confidence">Confidence (0-100): </label>
+                    <div class="ui input">
+                        <input type="number" id="confidence" min="0" max="100" value={this.state.confidence} label="Confidence (0-100)" onChange={this.handleChange} />
+                    </div>
+                </div>
+                <button type="submit" id="submit-btn" class="ui button" onClick={this.handleSubmit}>Add File</button>
             </div>
         );
     }
