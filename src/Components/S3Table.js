@@ -36,7 +36,7 @@ class S3Table extends Component {
                 console.log("Retrieved CSV files from S3");
                 for (var i in result) {
                     const date = (result[i].lastModified).toUTCString();
-                    const obj = { name: result[i].key, last_modified: date, size: result[i].size };
+                    const obj = { name: result[i].key.replace("csv/",""), last_modified: date, size: result[i].size };
                     fileList.push(obj);
                 }
                 fileList.sort((a,b) => Date.parse(b.last_modified) - Date.parse(a.last_modified));
@@ -65,7 +65,7 @@ class S3Table extends Component {
             return a;
         }
 
-        return Storage.get(key, { download: true, level: "protected" })
+        return Storage.get("csv/"+key, { download: true, level: "protected" })
             .then(res => downloadBlob(res.Body, key)) // derive downloadFileName from fileKey if you wish
             .catch(err => {
                 console.log(err);
@@ -74,7 +74,7 @@ class S3Table extends Component {
     }
 
     async removeData(key) {
-        Storage.remove(key, { level: 'protected' })
+        Storage.remove("csv/"+key, { level: 'protected' })
             .then(result => console.log(result))
             .catch(err => console.log(err));
         var arr = [...this.state.files];
@@ -90,13 +90,13 @@ class S3Table extends Component {
     render() {
         return (
             <div className="S3Table">
-                <button type="submit" id="list-data-btn" class="ui primary button" onClick={this.onGetData}>List Files</button>
+                <button type="submit" id="list-data-btn" className="ui primary button" onClick={this.onGetData}>List Files</button>
                 <Table celled compact >
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>Name</Table.HeaderCell>
                             <Table.HeaderCell>Date Modified</Table.HeaderCell>
-                            <Table.HeaderCell>File Size</Table.HeaderCell>
+                            <Table.HeaderCell>File Size (Bytes)</Table.HeaderCell>
                             <Table.HeaderCell>Download File</Table.HeaderCell>
                             <Table.HeaderCell>Delete File</Table.HeaderCell>
                         </Table.Row>

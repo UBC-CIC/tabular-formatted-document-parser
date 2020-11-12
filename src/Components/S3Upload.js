@@ -1,7 +1,16 @@
 import React, { Component } from "react";
 import {Storage } from "aws-amplify";
-
+import {Tooltip, Button} from "@material-ui/core";
+import {withStyles} from "@material-ui/core/styles";
 import { v4 as uuid } from 'uuid';
+
+const TextOnlyTooltip = withStyles({
+    tooltip: {
+      color: "black",
+      backgroundColor: "transparent",
+      fontSize: "1em"
+    }
+})(Tooltip);
 
 class S3Upload extends Component {
     constructor(props) {
@@ -65,19 +74,22 @@ class S3Upload extends Component {
         //const isSubmitEnabled = this.state.file !== undefined;
         return (
             <div className="S3Upload">
-                <div class="ui divided list">
+                <div className="ui divided list">
                     <label for="fileUpload">Upload File (pdf, png, or jpg format only)</label>
                     <div class="ui input">
                         <input id="fileUpload" type="file" />
                     </div>
                     <label for="pages">Pages (seperated with commas)</label>
-                    <div class="ui input">
+                    <div className="ui input">
                         <input id="pages" type="text"/>
                     </div>
                     <label for="confidence">Confidence (0-100): </label>
-                    <div class="ui input">
+                    <div className="ui input">
                         <input type="number" id="confidence" min="0" max="100" value={this.state.confidence} label="Confidence (0-100)" onChange={this.handleChange} />
                     </div>
+                    <TextOnlyTooltip title="Confidence acts as a filter of the results. The recommended default value is 50." aria-setsize="15px">
+                        <Button>?</Button>
+                    </TextOnlyTooltip>
                 </div>
                 <button type="submit" id="submit-btn" class="ui button" onClick={this.handleSubmit}>Add File</button>
             </div>

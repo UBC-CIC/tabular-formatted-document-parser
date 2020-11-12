@@ -25,7 +25,8 @@ class App extends Component {
   render() {
     return(
       <div className="App">
-        <AmplifySignOut />
+        <AmplifySignOut/>
+        <p>Welcome {this.state.username}</p>
         <S3Upload />
         <br/>
         <S3Table />
