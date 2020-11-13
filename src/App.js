@@ -1,6 +1,7 @@
 import './App.css';
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
+import { Container, Divider, Grid, Header, Image } from 'semantic-ui-react'
 import {Auth} from 'aws-amplify';
 import S3Upload from "./Components/S3Upload";
 import S3Table from "./Components/S3Table";
@@ -25,8 +26,30 @@ class App extends Component {
   render() {
     return(
       <div className="App">
-        <AmplifySignOut/>
-        <p>Welcome {this.state.username}</p>
+          <Grid>
+              <Grid.Row>
+                  <Grid.Column width={2} textAlign={"center"} verticalAlign={"middle"}>
+                      TextRact
+                  </Grid.Column>
+                  <Grid.Column width={4}>
+
+                  </Grid.Column>
+                  <Grid.Column width={4} textAlign={"center"} verticalAlign={"middle"}>
+                      <h3>Welcome, {this.state.username}!</h3>
+                  </Grid.Column>
+                  <Grid.Column width={4}>
+
+                  </Grid.Column>
+                  <Grid.Column width={2}>
+                      <AmplifySignOut/>
+                  </Grid.Column>
+              </Grid.Row>
+              <Grid.Row>
+                  <Grid.Column>
+
+                  </Grid.Column>
+              </Grid.Row>
+          </Grid>
         <S3Upload />
         <br/>
         <S3Table />
