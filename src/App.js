@@ -1,5 +1,5 @@
 import './App.css';
-import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
+import { withAuthenticator, AmplifyAuthenticator } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
 import { Container, Divider, Grid, Header, Image } from 'semantic-ui-react'
 import {Auth} from 'aws-amplify';
