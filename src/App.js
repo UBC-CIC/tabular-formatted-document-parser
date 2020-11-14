@@ -5,6 +5,7 @@ import { Container, Divider, Grid, Header, Image } from 'semantic-ui-react'
 import {Auth} from 'aws-amplify';
 import S3Upload from "./Components/S3Upload";
 import S3Table from "./Components/S3Table";
+import Navbar from "./Components/Navbar/Navbar";
 
 class App extends Component {
   constructor(props){
@@ -24,35 +25,19 @@ class App extends Component {
   }
   
   render() {
+      const {username} = this.state;
     return(
       <div className="App">
           <Grid>
-              <Grid.Row>
-                  <Grid.Column width={2} textAlign={"center"} verticalAlign={"middle"}>
-                      TextRact
-                  </Grid.Column>
-                  <Grid.Column width={4}>
-
-                  </Grid.Column>
-                  <Grid.Column width={4} textAlign={"center"} verticalAlign={"middle"}>
-                      <h3>Welcome, {this.state.username}!</h3>
-                  </Grid.Column>
-                  <Grid.Column width={4}>
-
-                  </Grid.Column>
-                  <Grid.Column width={2}>
-                      <AmplifySignOut/>
-                  </Grid.Column>
-              </Grid.Row>
+                  <Navbar username={username} />
               <Grid.Row>
                   <Grid.Column>
-
+                      <S3Upload />
+                      <br/>
+                      <S3Table />
                   </Grid.Column>
               </Grid.Row>
           </Grid>
-        <S3Upload />
-        <br/>
-        <S3Table />
       </div>
     )
   }

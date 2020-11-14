@@ -1,0 +1,77 @@
+.navbar-inner {
+    background-color: #012144;
+    color: lightgray;
+}
+
+.navbar-wrapper {
+    background-color: black;
+    padding: 3px;
+}
+
+.brand-wrapper {
+    background-color: #313a45;
+    border-radius: 4px;
+    border: 2px solid #1d2029;
+    width: 120px;
+    height: 40px;
+    margin-left: 30px;
+    margin-top: -2px;
+    padding: 2px;
+    color: whitesmoke;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-text {
+    font-size: 20px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    letter-spacing: 2px;
+}
+
+.brand-text-divider {
+ color: orange;
+}
+
+.aws-image {
+    width: 45px;
+    heigth: 45px;
+    margin-left: -70.0%;
+}
+
+@media only screen and (max-width: 1024px) {
+    .aws-image {
+        width: 40px;
+        height: 40px;
+        margin-left: -50%;
+    }
+    .brand-text {
+        font-size: 15px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+    }
+
+    .brand-wrapper {
+        width: 90px;
+        height: 30px;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .aws-image {
+        width: 30px;
+        height: 30px;
+        margin-left: -30px;
+    }
+    .brand-text {
+        font-size: 8px;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 500;
+    }
+
+    .brand-wrapper {
+        width: 70px;
+        height: 30px;
+    }
+}
