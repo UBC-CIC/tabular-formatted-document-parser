@@ -66,21 +66,6 @@ class Navbar extends Component {
                                         </Grid.Column>
                                     </Grid.Row>
                                 </Grid>
-                               {/* <Grid>
-                                    <Grid.Row>
-                                        <Grid.Column width={4} style={{paddingTop: "7px"}}>
-                                            <span className={"logout-text"}>Logout</span>
-                                        </Grid.Column>
-                                        <Grid.Column width={12}>
-                                            <IconButton
-                                                className={"logout-button"}
-                                                onClick={this.onSignOut}
-                                            >
-                                                <ExitToAppIcon className={"logout-button-icon"}/>
-                                            </IconButton>
-                                        </Grid.Column>
-                                    </Grid.Row>
-                                </Grid>*/}
                             </Grid.Column>
                         </Grid.Row>
                     </Grid>
