@@ -12,7 +12,7 @@
     background-color: #313a45;
     border-radius: 4px;
     border: 2px solid #1d2029;
-    width: 120px;
+    width: 10vw;
     height: 40px;
     margin-left: 30px;
     margin-top: -2px;
@@ -24,7 +24,7 @@
 }
 
 .brand-text {
-    font-size: 20px;
+    font-size: 1.5rem;
     font-family: 'Roboto', sans-serif;
     font-weight: 500;
     letter-spacing: 2px;
@@ -37,7 +37,7 @@
 .aws-image {
     width: 40px;
     height: 40px;
-    margin-left: -90.0%;
+    margin-left: -95.0%;
     border-radius: 4px;
 }
 
@@ -47,21 +47,35 @@
     }
 }
 
+@media only screen and (max-width: 1600px) {
+    .aws-image {
+        margin-left: -35.0%;
+    }
+
+    .brand-text {
+        font-size: 1.3rem;
+    }
+}
+
 @media only screen and (max-width: 1024px) {
     .aws-image {
         width: 40px;
         height: 40px;
-        margin-left: -30%;
+        margin-left: -30.0%;
     }
     .brand-text {
-        font-size: 15px;
-        font-family: 'Roboto', sans-serif;
-        font-weight: 500;
+        font-size: 1.0rem;
     }
 
     .brand-wrapper {
-        width: 90px;
+        width: 10vw;
         height: 30px;
+    }
+}
+
+@media only screen and (max-width: 870px) {
+    .aws-image {
+        margin-left: 0.0%;
     }
 }
 
@@ -72,13 +86,11 @@
         margin-left: -30%;
     }
     .brand-text {
-        font-size: 8px;
-        font-family: 'Roboto', sans-serif;
-        font-weight: 500;
+        font-size: 0.5rem;
     }
 
     .brand-wrapper {
-        width: 70px;
+        width: 10vw;
         height: 30px;
     }
 }
