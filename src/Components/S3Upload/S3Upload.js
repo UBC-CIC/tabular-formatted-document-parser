@@ -3,7 +3,7 @@ import {Storage } from "aws-amplify";
 import {Tooltip, Button} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import { v4 as uuid } from 'uuid';
-import {Grid} from "semantic-ui-react";
+import {Grid, Divider} from "semantic-ui-react";
 import "./S3Upload.css";
 
 const TextOnlyTooltip = withStyles({
@@ -99,7 +99,7 @@ class S3Upload extends Component {
             <Grid style={{marginLeft: "1.66%"}}>
                 <Grid.Row>
                     <Grid.Column>
-                        <div>
+                        <div className={"upload-box"}>
                             <Grid>
                                 <Grid.Row style={{padding: "0px"}}>
                                     <Grid.Column verticalAlign={"middle"} textAlign={"left"}>
@@ -111,14 +111,29 @@ class S3Upload extends Component {
                                 <Grid.Row style={{padding: "0px"}}>
                                     <Grid.Column verticalAlign={"top"} textAlign={"left"}>
                                         <div className={"upload-wrapper-top-bottom"}>
-                                            <span className={"upload-wrapper-top-desc"}>Please select a file for upload.</span>
+                                            <span className={"upload-wrapper-top-desc"}>Please select a file for upload and fill in the requested fields.</span>
                                             <br/>
-                                            <span className={"upload-wrapper-top-desc"}><strong> Only the following formats are accepted: pdf, png, or jpg format.</strong></span>
+                                            <span className={"upload-wrapper-top-desc"}><strong className={"important-text"}> *Only the following file formats are accepted: pdf, png, or jpg format.</strong></span>
                                         </div>
                                     </Grid.Column>
                                 </Grid.Row>
                                 <Grid.Row>
-
+                                    <Grid.Column className={"upload-input-info-box"} style={{marginTop: "-5px"}}>
+                                        <div className={"upload-input-info-box-inner"} >
+                                            <input id="fileUpload" type="file" />
+                                            <Divider />
+                                            <label htmlFor="pages">Pages (separated with commas)</label>
+                                            <div className="ui input">
+                                                <input id="pages" type="text"/>
+                                            </div>
+                                            <label htmlFor="confidence">Confidence (0-100): </label>
+                                            <div className="ui input">
+                                                <input type="number" id="confidence" min="0" max="100"
+                                                       value={this.state.confidence} label="Confidence (0-100)"
+                                                       onChange={this.handleChange}/>
+                                            </div>
+                                        </div>
+                                    </Grid.Column>
                                 </Grid.Row>
                             </Grid>
                         </div>
