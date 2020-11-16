@@ -36,11 +36,12 @@ class App extends Component {
                          <br/>
                      </Grid.Column>
                  </Grid.Row>
-              <Grid.Row columns={2}>
-                  <Grid.Column>
+              <Grid.Row columns={3}>
+                  <Grid.Column width={6}>
                       <S3Upload />
                   </Grid.Column>
-                  <Grid.Column>
+                  <Grid.Column width={1}></Grid.Column>
+                  <Grid.Column width={9}>
                       <S3Table />
                   </Grid.Column>
               </Grid.Row>

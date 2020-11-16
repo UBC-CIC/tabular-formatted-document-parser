@@ -4,13 +4,15 @@ import {Tooltip, Button} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import { v4 as uuid } from 'uuid';
 import {Grid, Divider} from "semantic-ui-react";
+import HelpIcon from '@material-ui/icons/Help';
 import "./S3Upload.css";
 
 const TextOnlyTooltip = withStyles({
     tooltip: {
-      color: "black",
-      backgroundColor: "transparent",
-      fontSize: "1em"
+        color: "black",
+        backgroundColor: "white",
+        opacity: 0.5,
+        fontSize: "1em"
     }
 })(Tooltip);
 
@@ -117,20 +119,50 @@ class S3Upload extends Component {
                                         </div>
                                     </Grid.Column>
                                 </Grid.Row>
-                                <Grid.Row>
-                                    <Grid.Column className={"upload-input-info-box"} style={{marginTop: "-5px"}}>
-                                        <div className={"upload-input-info-box-inner"} >
-                                            <input id="fileUpload" type="file" />
+                                <Grid.Row className={"upload-input-info"}>
+                                    <Grid.Column className={"upload-input-info-box"} textAlign={"left"} verticalAlign={"middle"}>
+                                        <div className={"upload-input-info-box-inner"}>
+                                            <Grid>
+                                                <Grid.Row>
+                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"} style={{marginLeft: "15.00%"}}>
+                                                        <input id="fileUpload" type="file" />
+                                                    </Grid.Column>
+                                                </Grid.Row>
+                                            </Grid>
                                             <Divider />
-                                            <label htmlFor="pages">Pages (separated with commas)</label>
-                                            <div className="ui input">
-                                                <input id="pages" type="text"/>
+                                            <div>
+                                                <label htmlFor="pages">Pages (separated with commas): </label>
+                                                <div className="ui input">
+                                                    <input id="pages" type="text"/>
+                                                </div>
                                             </div>
-                                            <label htmlFor="confidence">Confidence (0-100): </label>
-                                            <div className="ui input">
-                                                <input type="number" id="confidence" min="0" max="100"
-                                                       value={this.state.confidence} label="Confidence (0-100)"
-                                                       onChange={this.handleChange}/>
+                                            <br/>
+                                            <div>
+                                                <label htmlFor="confidence">Confidence (0-100): </label>
+                                                <div className="ui input">
+                                                    <span>
+                                                        <input type="number" id="confidence" min="0" max="100"
+                                                               value={this.state.confidence} label="Confidence (0-100)"
+                                                               onChange={this.handleChange}/>
+                                                        {' '}
+                                                        <TextOnlyTooltip title="Confidence acts as a filter of the results. The recommended default value is 50." aria-setsize="15px" placement="right">
+                                                        <HelpIcon style={{marginBottom: "-5px", color: "#313a45"}} />
+                                                        </TextOnlyTooltip>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <Grid>
+                                                <Grid.Row>
+                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"} style={{paddingTop: "15px"}}>
+                                                        <button type="submit" id="submit-btn" className="ui secondary button"
+                                                                onClick={this.handleSubmit}>Add File
+                                                        </button>
+                                                    </Grid.Column>
+                                                </Grid.Row>
+                                            </Grid>
+                                            <Divider />
+                                            <div>
+                                                Some text
                                             </div>
                                         </div>
                                     </Grid.Column>

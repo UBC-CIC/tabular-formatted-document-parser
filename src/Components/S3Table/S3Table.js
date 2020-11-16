@@ -90,7 +90,7 @@ class S3Table extends Component {
     render() {
         return (
             <div className="S3Table">
-                <button type="submit" id="list-data-btn" className="ui primary button" onClick={this.onGetData}>List Files</button>
+                <button type="submit" id="list-data-btn" className="ui secondary button" onClick={this.onGetData}>List Files</button>
                 <Table celled compact >
                     <Table.Header>
                         <Table.Row>
