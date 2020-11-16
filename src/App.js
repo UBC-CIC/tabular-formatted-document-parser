@@ -3,8 +3,8 @@ import { withAuthenticator, AmplifyAuthenticator } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
 import { Container, Divider, Grid, Header, Image } from 'semantic-ui-react'
 import {Auth} from 'aws-amplify';
-import S3Upload from "./Components/S3Upload";
-import S3Table from "./Components/S3Table";
+import S3Upload from "./Components/S3Upload/S3Upload";
+import S3Table from "./Components/S3Table/S3Table";
 import Navbar from "./Components/Navbar/Navbar";
 
 class App extends Component {
@@ -30,10 +30,17 @@ class App extends Component {
       <div className="App">
           <Grid>
                   <Navbar username={username} />
-              <Grid.Row>
+                 <Grid.Row>
+                     <Grid.Column>
+                         <br/>
+                         <br/>
+                     </Grid.Column>
+                 </Grid.Row>
+              <Grid.Row columns={2}>
                   <Grid.Column>
                       <S3Upload />
-                      <br/>
+                  </Grid.Column>
+                  <Grid.Column>
                       <S3Table />
                   </Grid.Column>
               </Grid.Row>

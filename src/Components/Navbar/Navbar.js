@@ -26,7 +26,7 @@ class Navbar extends Component {
                                         <Grid.Row columns={2}>
                                             <Grid.Column textAlign={"middle"} verticalAlign={"middle"}>
                                                 <div className={"brand-wrapper"}>
-                                                    <span className={"brand-text"}>Text<span className={"brand-text-divider"}>/</span>Ract</span>
+                                                    <span className={"brand-text"}>Text<span className={"brand-text-divider"}>/</span>Extract</span>
                                                 </div>
                                             </Grid.Column>
                                             <Grid.Column>

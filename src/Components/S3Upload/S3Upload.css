@@ -1,0 +1,27 @@
+.upload-wrapper-top {
+    background-color: #012144;
+    height: 40px;
+    padding: 20px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.upload-wrapper-top-bottom {
+    background-color: #012144;
+    height: 60px;
+    padding: 5px 20px 5px 20px;
+}
+
+.upload-wrapper-top-header {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 400;
+    font-size: 1.5rem;
+    color: whitesmoke;
+}
+
+.upload-wrapper-top-desc {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 400;
+    font-size: 1.1rem;
+    color: whitesmoke;
+}

@@ -3,6 +3,8 @@ import {Storage } from "aws-amplify";
 import {Tooltip, Button} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import { v4 as uuid } from 'uuid';
+import {Grid} from "semantic-ui-react";
+import "./S3Upload.css";
 
 const TextOnlyTooltip = withStyles({
     tooltip: {
@@ -72,8 +74,8 @@ class S3Upload extends Component {
 
     render() {
         //const isSubmitEnabled = this.state.file !== undefined;
-        return (
-            <div className="S3Upload">
+
+        /*<div className="S3Upload">
                 <div className="ui divided list">
                     <label for="fileUpload">Upload File (pdf, png, or jpg format only)</label>
                     <div class="ui input">
@@ -92,8 +94,38 @@ class S3Upload extends Component {
                     </TextOnlyTooltip>
                 </div>
                 <button type="submit" id="submit-btn" class="ui button" onClick={this.handleSubmit}>Add File</button>
-            </div>
-        );
+            </div>*/
+        return (
+            <Grid style={{marginLeft: "1.66%"}}>
+                <Grid.Row>
+                    <Grid.Column>
+                        <div>
+                            <Grid>
+                                <Grid.Row style={{padding: "0px"}}>
+                                    <Grid.Column verticalAlign={"middle"} textAlign={"left"}>
+                                        <div className={"upload-wrapper-top"}>
+                                            <span className={"upload-wrapper-top-header"}>Upload File For Processing</span>
+                                        </div>
+                                    </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row style={{padding: "0px"}}>
+                                    <Grid.Column verticalAlign={"top"} textAlign={"left"}>
+                                        <div className={"upload-wrapper-top-bottom"}>
+                                            <span className={"upload-wrapper-top-desc"}>Please select a file for upload.</span>
+                                            <br/>
+                                            <span className={"upload-wrapper-top-desc"}><strong> Only the following formats are accepted: pdf, png, or jpg format.</strong></span>
+                                        </div>
+                                    </Grid.Column>
+                                </Grid.Row>
+                                <Grid.Row>
+
+                                </Grid.Row>
+                            </Grid>
+                        </div>
+                    </Grid.Column>
+                </Grid.Row>
+            </Grid>
+        )
     }
 }
 

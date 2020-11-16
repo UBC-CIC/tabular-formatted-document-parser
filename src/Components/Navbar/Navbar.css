@@ -46,6 +46,10 @@
     border: none;
 }
 
+.logout-text-button:hover {
+   cursor: pointer;
+}
+
 .logout-button-icon {
     color: orange;
     font-size: 32px !important;
@@ -82,7 +86,7 @@
 
 @media only screen and (max-width: 1600px) {
     .aws-image {
-        margin-left: -35.0%;
+        margin-left: -20.0%;
     }
 
     .brand-text {
@@ -90,7 +94,21 @@
     }
 
     .brand-wrapper {
-        width: 10vw;
+        width: 12vw;
+    }
+}
+
+@media only screen and (max-width: 1300px) {
+    .aws-image {
+        margin-left: -10.0%;
+    }
+
+    .brand-text {
+        font-size: 1.2rem;
+    }
+
+    .brand-wrapper {
+        width: 12vw;
     }
 }
 
@@ -98,21 +116,24 @@
     .aws-image {
         width: 40px;
         height: 40px;
-        margin-left: -30.0%;
+        margin-left: -25.0%;
     }
     .brand-text {
-        font-size: 1.0rem;
+        font-size: 0.9rem;
     }
 
     .brand-wrapper {
-        width: 10vw;
+        width: 11vw;
         height: 30px;
     }
 }
 
 @media only screen and (max-width: 870px) {
     .aws-image {
-        margin-left: 0.0%;
+        margin-left: -20.0%;
+    }
+    .brand-text {
+        font-size: 0.6rem;
     }
     .brand-wrapper {
         width: 10vw;
@@ -123,10 +144,26 @@
     .aws-image {
         width: 30px;
         height: 30px;
-        margin-left: -30%;
+        margin-left: -20%;
     }
     .brand-text {
         font-size: 0.5rem;
+    }
+
+    .brand-wrapper {
+        width: 10vw;
+        height: 30px;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .aws-image {
+        width: 30px;
+        height: 30px;
+        margin-left: -20%;
+    }
+    .brand-text {
+        font-size: 0.3rem;
     }
 
     .brand-wrapper {
