@@ -128,7 +128,7 @@ class S3Table extends Component {
                                             }
                                         </Grid.Column>
                                         <Grid.Column width={9} textAlign={"left"} verticalAlign={"middle"}>
-                                            <span className={"refresh-btn-message"}>Please, click on the refresh button to update the status.</span>
+                                            <span className={"refresh-btn-message"}>Please click on the refresh button to update the status.</span>
                                         </Grid.Column>
                                         <Grid.Column width={4}>
 

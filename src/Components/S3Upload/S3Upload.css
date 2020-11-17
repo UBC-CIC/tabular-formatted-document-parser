@@ -38,7 +38,7 @@
 .post-processing-info {
     font-family: 'Roboto', sans-serif !important;
     font-weight: 400;
-    font-size: 18px;
+    font-size: 17px;
 }
 
 #submit-btn {
@@ -71,7 +71,7 @@
 .file-options-subheader {
     font-family: 'Roboto', sans-serif !important;
     font-weight: 400;
-    font-size: 12px;
+    font-size: 13px;
     color: orange;
 }
 
@@ -82,4 +82,15 @@
     margin-left: -7px;
 }
 
+.invalid-file-disclaimer {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 500;
+    color: red;
+    font-size: 16px;
+}
+
+.file-selected-desc {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 400;
+}
 
