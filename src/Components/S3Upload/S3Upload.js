@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import {Storage } from "aws-amplify";
-import {Tooltip, Button} from "@material-ui/core";
+import {Tooltip} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import { v4 as uuid } from 'uuid';
 import {Grid, Divider} from "semantic-ui-react";
@@ -12,7 +12,7 @@ import "./S3Upload.css";
 const TextOnlyTooltip = withStyles({
     tooltip: {
         color: "black",
-        backgroundColor: "white",
+        backgroundColor: "lightgray",
         opacity: 0.5,
         fontSize: "1em"
     }
@@ -112,56 +112,69 @@ class S3Upload extends Component {
                                             <Divider />
                                             <Grid>
                                                 <Grid.Row style={{paddingBottom: "0px"}}>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
+                                                    <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
                                                         <span className={"file-options-header"}><strong>File Options</strong></span>
                                                     </Grid.Column>
                                                 </Grid.Row>
                                                 <Grid.Row style={{padding: "0px"}}>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"top"}>
+                                                    <Grid.Column textAlign={"left"} verticalAlign={"top"}>
                                                         <span className={"file-options-subheader"}>(* indicates a required field)</span>
                                                     </Grid.Column>
                                                 </Grid.Row>
                                             </Grid>
                                             <br/>
+                                            <br/>
                                             <Grid>
-                                                <Grid.Row style={{paddingBottom: "0px"}}>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
-                                                        <label htmlFor="pages"><strong>*Pages (separated with commas):</strong></label>
-                                                    </Grid.Column>
-                                                </Grid.Row>
-                                                <Grid.Row style={{padding: "0px"}}>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
-                                                        <div className="ui input">
-                                                            <input id="pages" type="text" placeholder={"eg. 1,3,5,7"}/>
+                                                <Grid.Row>
+                                                    <Grid.Column textAlign={"left"} verticalAlign={"middle"} stretched={true}>
+                                                        <div className={"input-card"}>
+                                                            <Grid>
+                                                                <Grid.Row style={{paddingBottom: "0px"}}>
+                                                                    <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                                        <label className={"label"} htmlFor="pages"><strong>*Pages (separated with commas):</strong></label>
+                                                                    </Grid.Column>
+                                                                </Grid.Row>
+                                                                <Grid.Row style={{padding: "0px"}}>
+                                                                    <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                                        <div className="ui input input-value-box">
+                                                                            <input id="pages" type="text" placeholder={"eg. 1,3,5,7"}/>
+                                                                        </div>
+                                                                    </Grid.Column>
+                                                                </Grid.Row>
+                                                            </Grid>
+                                                            <br/>
+                                                            <br/>
+                                                            <Grid>
+                                                                <Grid.Row style={{paddingBottom: "0px"}}>
+                                                                    <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                        <span>
+                                                            <label className={"label"} htmlFor="confidence"><strong>*Confidence (0-100):</strong></label>
+                                                            <TextOnlyTooltip title="Confidence acts as a filter of the results. The recommended default value is 50." aria-setsize="15px" placement="right">
+                                                            <IconButton style={{padding: "5px"}}>
+                                                                <HelpIcon />
+                                                            </IconButton>
+                                                        </TextOnlyTooltip>
+                                                        </span>
+                                                                    </Grid.Column>
+                                                                </Grid.Row>
+                                                                <Grid.Row style={{padding: "0px"}}>
+                                                                    <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                                        <div className={"ui input input-value-box"}>
+                                                                            <input type="number" id="confidence" min="0" max="100"
+                                                                                   value={this.state.confidence} label="Confidence (0-100)"
+                                                                                   onChange={this.handleChange}/>
+                                                                        </div>
+                                                                    </Grid.Column>
+                                                                </Grid.Row>
+                                                            </Grid>
                                                         </div>
                                                     </Grid.Column>
                                                 </Grid.Row>
                                             </Grid>
-                                            <br/>
-                                            <Grid>
-                                                <Grid.Row style={{paddingBottom: "0px"}}>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
-                                                        <span>
-                                                            <label htmlFor="confidence"><strong>*Confidence (0-100):</strong></label>
-                                                            <TextOnlyTooltip title="Confidence acts as a filter of the results. The recommended default value is 50." aria-setsize="15px" placement="right">
-                                                            <IconButton style={{padding: "0px"}}>
-                                                                <HelpIcon style={{color: "#313a45"}} />
-                                                            </IconButton>
-                                                        </TextOnlyTooltip>
-                                                        </span>
-                                                    </Grid.Column>
-                                                </Grid.Row>
-                                                <Grid.Row style={{padding: "0px"}}>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
-                                                        <input type="number" id="confidence" min="0" max="100"
-                                                               value={this.state.confidence} label="Confidence (0-100)"
-                                                               onChange={this.handleChange}/>
-                                                    </Grid.Column>
-                                                </Grid.Row>
-                                            </Grid>
+
                                             <Grid>
                                                 <Grid.Row>
-                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"} style={{paddingTop: "15px"}}>
+                                                    <Grid.Column textAlign={"center"} verticalAlign={"middle"} style={{paddingTop: "0px"}}>
                                                         <button type="submit" id="submit-btn" className="ui secondary button"
                                                                 onClick={this.handleSubmit}>
                                                             <Grid>
@@ -180,7 +193,7 @@ class S3Upload extends Component {
                                             </Grid>
                                             <Divider />
                                             <div>
-                                                <span className={"post-processing-info"}>After the file is processed, the output data will appear in the table to the right.</span>
+                                                <span className={"post-processing-info"}>After the file is processed, the output data will appear in the table.</span>
                                             </div>
                                         </div>
                                     </Grid.Column>

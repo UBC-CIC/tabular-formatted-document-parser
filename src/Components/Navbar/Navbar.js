@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Container, Divider, Grid, Header, Image } from 'semantic-ui-react';
+import { Grid } from 'semantic-ui-react';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import IconButton from '@material-ui/core/IconButton';
 import { Auth } from "aws-amplify";

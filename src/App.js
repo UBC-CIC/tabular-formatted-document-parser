@@ -1,11 +1,12 @@
 import './App.css';
-import { withAuthenticator, AmplifyAuthenticator } from '@aws-amplify/ui-react';
+import { withAuthenticator } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
-import { Container, Divider, Grid, Header, Image } from 'semantic-ui-react'
+import { Grid } from 'semantic-ui-react'
 import {Auth} from 'aws-amplify';
 import S3Upload from "./Components/S3Upload/S3Upload";
 import S3Table from "./Components/S3Table/S3Table";
 import Navbar from "./Components/Navbar/Navbar";
+import Footer from "./Components/Footer/Footer";
 
 class App extends Component {
   constructor(props){
@@ -33,7 +34,6 @@ class App extends Component {
                  <Grid.Row>
                      <Grid.Column>
                          <br/>
-                         <br/>
                      </Grid.Column>
                  </Grid.Row>
               <Grid.Row columns={3}>
@@ -46,14 +46,10 @@ class App extends Component {
                   </Grid.Column>
               </Grid.Row>
           </Grid>
-          <Grid>
-              <Grid.Row>
-                  <Grid.Column>
-                      <Divider/>
-                      Footer
-                  </Grid.Column>
-              </Grid.Row>
-          </Grid>
+         <br/>
+         <div className={"footer"}>
+
+         </div>
       </div>
     )
   }
