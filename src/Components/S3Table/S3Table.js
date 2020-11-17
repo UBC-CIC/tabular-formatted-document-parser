@@ -1,9 +1,13 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import { Storage } from "aws-amplify";
 import { Table, Grid, Divider } from "semantic-ui-react";
 import RefreshIcon from '@material-ui/icons/Refresh';
+import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+import GetAppIcon from '@material-ui/icons/GetApp';
 import IconButton from '@material-ui/core/IconButton';
 import "./S3Table.css";
+import {processingFinished} from "../../actions/appStateActions";
 
 class S3Table extends Component {
     constructor(props) {
@@ -15,7 +19,9 @@ class S3Table extends Component {
                 direction: 'desc'
             },
             files: [],
+            numFiles: 0,
             refreshBtnDisabled: false,
+            refreshInterval: null,
         }
 
         this.componentDidMount = this.componentDidMount.bind(this);
@@ -30,6 +36,25 @@ class S3Table extends Component {
         } catch (err) {
             console.log(err);
         }
+        const interval = window.setInterval(this.fetchData, 30000);
+        this.setState({
+            interval: interval,
+        })
+    }
+
+    componentWillUnmount() {
+        const {interval} = this.state;
+        clearInterval(interval);
+        this.setState({
+            interval: null,
+        })
+    }
+
+    fetchData = () => {
+        const {processingInitiated} = this.props;
+        if (processingInitiated) {
+            this.onGetData();
+        }
     }
 
     async onGetData() {
@@ -37,6 +62,7 @@ class S3Table extends Component {
         this.setState({
             refreshBtnDisabled: true,
         })
+        const that = this;
         Storage.list('csv/', { level: 'protected' })
             .then(result => {
                 console.log("Retrieved CSV files from S3");
@@ -46,10 +72,20 @@ class S3Table extends Component {
                     fileList.push(obj);
                 }
                 fileList.sort((a,b) => Date.parse(b.last_modified) - Date.parse(a.last_modified));
-                this.setState({ files: fileList });
-                this.setState({
-                    refreshBtnDisabled: false,
-                })
+                const {numFiles} =  that.state;
+                const {processingFinished, processingInitiated} = that.props;
+                if (fileList.length > numFiles) {
+                    processingFinished();
+                    this.setState({
+                        refreshBtnDisabled: false,
+                    })
+                }
+                this.setState({ files: fileList, numFiles: fileList.length});
+                if (!processingInitiated) {
+                    this.setState({
+                        refreshBtnDisabled: false,
+                    })
+                }
             })
             .catch(err => console.log(err));
     }
@@ -91,7 +127,7 @@ class S3Table extends Component {
         console.log(`index is ${index}`);
         if (index !== -1) {
             arr.splice(index, 1);
-            this.setState({ files: arr });
+            this.setState({ files: arr, numFiles: arr.length });
         }
     }
 
@@ -120,15 +156,15 @@ class S3Table extends Component {
                                                 :
                                                 <div>
                                                     <IconButton
-                                                        style={{color: "#293b75", width: "30px", height: "30px", marginLeft: "20px"}}
+                                                        style={{color: "#194cea", width: "30px", height: "30px", marginLeft: "20px"}}
                                                         onClick={this.onGetData}>
-                                                        <RefreshIcon style={{fontSize: "30px"}} />
+                                                        <RefreshIcon style={{fontSize: "25px"}} />
                                                     </IconButton>
                                                 </div>
                                             }
                                         </Grid.Column>
                                         <Grid.Column width={9} textAlign={"left"} verticalAlign={"middle"}>
-                                            <span className={"refresh-btn-message"}>Please click on the refresh button to update the status.</span>
+                                            <span className={"refresh-btn-message"}>Please click on the refresh button to update the table.</span>
                                         </Grid.Column>
                                         <Grid.Column width={4}>
 
@@ -136,33 +172,74 @@ class S3Table extends Component {
                                     </Grid.Row>
                                     <Divider />
                                     <Grid.Row>
-                                        <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                        <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
+                                            <div style={{border: "1px solid red", borderRadius: "6px"}}>
+                                                <Grid>
+                                                    <Grid.Row columns={5} style={{paddingLeft: "0px", marginLeft: "20px", marginRight: "20px", paddingRight: "0px"}}>
+                                                        <Grid.Column style={{border: "1px solid yellow"}}>
+                                                            Source File
+                                                        </Grid.Column>
+                                                        <Grid.Column style={{border: "1px solid blue"}}>
+                                                            Date
+                                                        </Grid.Column>
+                                                        <Grid.Column style={{border: "1px solid yellow"}}>
+                                                            Size
+                                                        </Grid.Column>
+                                                        <Grid.Column style={{border: "1px solid blue"}}>
+                                                            Download
+                                                        </Grid.Column>
+                                                        <Grid.Column style={{border: "1px solid yellow"}}>
+                                                            Delete
+                                                        </Grid.Column>
+                                                    </Grid.Row>
+                                                </Grid>
+                                            </div>
                                             <Table celled compact>
                                                 <Table.Header>
                                                     <Table.Row>
-                                                        <Table.HeaderCell>Name</Table.HeaderCell>
-                                                        <Table.HeaderCell>Date Modified</Table.HeaderCell>
+                                                        <Table.HeaderCell>Source File</Table.HeaderCell>
+                                                        <Table.HeaderCell>Date</Table.HeaderCell>
                                                         <Table.HeaderCell>File Size (Bytes)</Table.HeaderCell>
-                                                        <Table.HeaderCell>Download File</Table.HeaderCell>
-                                                        <Table.HeaderCell>Delete File</Table.HeaderCell>
+                                                        <Table.HeaderCell>Download</Table.HeaderCell>
+                                                        <Table.HeaderCell>Delete</Table.HeaderCell>
                                                     </Table.Row>
                                                 </Table.Header>
                                                 <Table.Body>
                                                     {this.state.files && this.state.files.map(({name, last_modified, size}) => {
+                                                        let sourceIndex =  name.lastIndexOf("_")+1;
+                                                        let sourceNameWithExt = name.substr(sourceIndex, name.length).toLowerCase();
+                                                        let sourceNameWithoutExt = sourceNameWithExt.replace(/\.[^/.]+$/, "");
+                                                        let source = sourceNameWithoutExt.replace("-", ".");
                                                         return (
                                                             <Table.Row key={name}>
-                                                                <Table.Cell>{name}</Table.Cell>
+                                                                <Table.Cell>{source}</Table.Cell>
                                                                 <Table.Cell>{last_modified}</Table.Cell>
                                                                 <Table.Cell>{size}</Table.Cell>
                                                                 <Table.Cell>
-                                                                    <button className="positive ui button"
-                                                                            onClick={() => this.downloadData(name)}>Download
-                                                                    </button>
+                                                                    <Grid>
+                                                                        <Grid.Row columns={1}>
+                                                                            <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
+                                                                                <IconButton
+                                                                                    onClick={() => this.downloadData(name)}
+                                                                                >
+                                                                                    <GetAppIcon style={{color: "lightgreen"}} />
+                                                                                </IconButton>
+                                                                            </Grid.Column>
+                                                                        </Grid.Row>
+                                                                    </Grid>
                                                                 </Table.Cell>
                                                                 <Table.Cell>
-                                                                    <button className="negative ui button"
-                                                                            onClick={() => this.removeData(name)}>Delete
-                                                                    </button>
+                                                                    <Grid>
+                                                                        <Grid.Row columns={1}>
+                                                                            <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
+                                                                                <IconButton
+                                                                                    onClick={() => this.removeData(name)}
+                                                                                >
+                                                                                    <DeleteForeverIcon style={{color: "red"}} />
+                                                                                </IconButton>
+                                                                            </Grid.Column>
+                                                                        </Grid.Row>
+                                                                    </Grid>
                                                                 </Table.Cell>
                                                             </Table.Row>
                                                         )
@@ -180,4 +257,15 @@ class S3Table extends Component {
     }
 }
 
-export default S3Table; 
+const mapStateToProps = (state) => {
+    return {
+        processingFinished: state.appState.processingFinished,
+        processingInitiated: state.appState.processingInitiated,
+    };
+};
+
+const mapDispatchToProps = {
+    processingFinished
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(S3Table);
