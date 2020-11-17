@@ -46,6 +46,14 @@ class App extends Component {
                   </Grid.Column>
               </Grid.Row>
           </Grid>
+          <Grid>
+              <Grid.Row>
+                  <Grid.Column>
+                      <Divider/>
+                      Footer
+                  </Grid.Column>
+              </Grid.Row>
+          </Grid>
       </div>
     )
   }
