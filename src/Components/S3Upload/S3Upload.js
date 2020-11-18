@@ -28,6 +28,8 @@ const TextOnlyTooltip = withStyles({
     }
 })(Tooltip);
 
+
+
 class S3Upload extends Component {
     constructor(props) {
         super(props);
@@ -99,16 +101,13 @@ class S3Upload extends Component {
         const pages = document.getElementById("pages").value.split(",");
         const visibility = 'protected';
         const selectedFile = document.getElementById("fileUpload").files;
-        console.log(selectedFile);
         if (!selectedFile.length) {
             return alert("Please choose a file to upload first!");
         }
         const file = selectedFile[0];
         const fileName = file.name;
-        console.log(fileName);
         let info;
         const [, , , extension] = /([^.]+)(\.(\w+))?$/.exec(fileName);
-        console.log("Extension is ", extension);
         const mimeType = fileName.slice(fileName.indexOf('.')+1);
         const keyName = uuid().concat("_").concat(fileName.replace(/\.[^/.]+$/, "")).concat("-" + mimeType);
         const key = `${keyName}${extension && '.'}${extension}`;
@@ -134,14 +133,12 @@ class S3Upload extends Component {
                     pages: pages,
                     file_type: mimeType
                 }
-                console.log(info);
                 Storage.put(`file_info/${keyName}.json`, JSON.stringify(info), { level: visibility, contentType: 'json' })
             },
             (err) => {
                 return alert('Error uploading file: ', err.message);
             }
         ).then(() => {
-            console.log("Finished uploading");
             this.setProcessingTimeout();
             this.setState({
                 displayFileOptions: false,
@@ -151,23 +148,19 @@ class S3Upload extends Component {
     }
 
     setProcessingTimeout = () => {
-        let loadingInterval = window.setInterval(setProgressBar, 2400);
+        let loadingInterval = window.setInterval(setProgressBar, 4800);
         this.setState({
             loadingInterval: loadingInterval,
         })
         const that = this;
         function setProgressBar() {
             const {loadingProgress} = that.state;
-            if (loadingProgress < 99) {
+            if (loadingProgress < 93) {
                 that.setState({
                     loadingProgress: loadingProgress+1,
                 });
             } else {
                 clearInterval(loadingInterval);
-                /*that.setState({
-                    isProcessing: false,
-                });
-                processingFinished();*/
             }
         }
     }
@@ -201,21 +194,22 @@ class S3Upload extends Component {
                                         <div className={"upload-input-info-box-inner"}>
                                             {(isProcessing)?
                                                 <Grid>
-                                                    <Grid.Row>
+                                                    <Grid.Row style={{paddingBottom: "0px"}}>
                                                         <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
                                                             <span className={"loading-message"}>
-                                                                <strong>Please wait while your file is processed...</strong>
+                                                                <strong>Please wait while your file is processed <span className={"loadingDots"}>...</span></strong>
                                                             </span>
                                                         </Grid.Column>
                                                     </Grid.Row>
-                                                    <Grid.Row>
+                                                    <Grid.Row style={{paddingTop: "5px"}}>
                                                         <Grid.Column>
                                                             <Box display="flex" alignItems="center">
                                                                 <Box width="100%" mr={1}>
-                                                                    <LinearProgress variant="determinate" value={loadingProgress} />
+                                                                    <LinearProgress variant="determinate" value={loadingProgress} className={"progressBar"} />
                                                                 </Box>
                                                                 <Box minWidth={35}>
-                                                                    <Typography variant="body2" color="textSecondary">{`${Math.round(
+                                                                    <Typography variant="body2" color="textSecondary"
+                                                                    className={"loading-num"}>{`${Math.round(
                                                                         loadingProgress,
                                                                     )}%`}</Typography>
                                                                 </Box>
@@ -270,7 +264,7 @@ class S3Upload extends Component {
                                                                          <Grid>
                                                                              <Grid.Row style={{paddingBottom: "0px"}}>
                                                                                  <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
-                                                                                     <label className={"label"} htmlFor="pages"><strong>*Pages (separated with commas):</strong></label>
+                                                                                     <label className={"label"} htmlFor="pages"><strong>Specific Pages (separated with commas):</strong></label>
                                                                                  </Grid.Column>
                                                                              </Grid.Row>
                                                                              <Grid.Row style={{padding: "0px"}}>
@@ -288,7 +282,7 @@ class S3Upload extends Component {
                                                                                  <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
                                                         <span>
                                                             <label className={"label"} htmlFor="confidence"><strong>*Confidence (0-100):</strong></label>
-                                                            <TextOnlyTooltip title="Confidence acts as a filter of the results. The recommended default value is 50." aria-setsize="15px" placement="right">
+                                                            <TextOnlyTooltip title="Confidence acts as a filter of the results. The recommended default value is 50." aria-setsize="15" placement="right">
                                                             <IconButton style={{padding: "5px"}}>
                                                                 <HelpIcon />
                                                             </IconButton>
@@ -318,10 +312,10 @@ class S3Upload extends Component {
                                                                              onClick={this.handleSubmit}>
                                                                          <Grid>
                                                                              <Grid.Row columns={2} style={{marginLeft: "-7px"}}>
-                                                                                 <Grid.Column width={12} textAlign={"middle"} verticalAlign={"middle"}>
+                                                                                 <Grid.Column width={12} textAlign={"center"} verticalAlign={"middle"}>
                                                                                      Process File
                                                                                  </Grid.Column>
-                                                                                 <Grid.Column width={4} style={{marginLeft: "-7px"}} textAlign={"middle"} verticalAlign={"middle"}>
+                                                                                 <Grid.Column width={4} style={{marginLeft: "-7px"}} textAlign={"center"} verticalAlign={"middle"}>
                                                                                      <CloudUploadIcon/>
                                                                                  </Grid.Column>
                                                                              </Grid.Row>
@@ -360,5 +354,6 @@ const mapDispatchToProps = {
     initiateProcessing,
     clearProcessingState
 };
+
 
 export default connect(mapStateToProps, mapDispatchToProps)(S3Upload);

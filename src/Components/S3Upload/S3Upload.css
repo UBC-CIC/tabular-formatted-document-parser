@@ -97,6 +97,47 @@
 .loading-message {
     font-family: 'Roboto', sans-serif !important;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 18px;
+}
+
+.loading-num {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 18px !important;
+}
+
+.loadingDots {
+    opacity: 1;
+    font-size: 28px;
+    animation: fadeWave 2s linear;
+    -webkit-animation: fadeWave 2s linear infinite;
+    -moz-animation: fadeWave 2s linear;
+    -o-animation: fadeWave 2s linear;
+}
+
+.progressBar {
+    border-radius: 2px !important;
+    height: 8px !important;
+    filter: drop-shadow(0 0 1px #4444dd) !important;
+}
+
+@keyframes fadeWave {
+    0%,100% { opacity: 0 }
+    50% { opacity: 1 }
+}
+
+@-moz-keyframes fadeWave {
+    0%,100% { opacity: 0 }
+    50% { opacity: 1 }
+}
+
+@-webkit-keyframes fadeWave {
+    0%,100% { opacity: 0 }
+    50% { opacity: 1 }
+}
+
+@-o-keyframes fadeWave {
+    0%,100% { opacity: 0 }
+    50% { opacity: 1 }
 }
 

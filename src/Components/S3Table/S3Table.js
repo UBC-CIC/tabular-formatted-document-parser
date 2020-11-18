@@ -1,13 +1,27 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { Storage } from "aws-amplify";
-import { Table, Grid, Divider } from "semantic-ui-react";
+import { Grid, Divider } from "semantic-ui-react";
 import RefreshIcon from '@material-ui/icons/Refresh';
 import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 import GetAppIcon from '@material-ui/icons/GetApp';
+import DeleteOutlineIcon from '@material-ui/icons/DeleteOutline';
 import IconButton from '@material-ui/core/IconButton';
+import {enqueueAppNotification} from "../../actions/notificationActions";
+
 import "./S3Table.css";
 import {processingFinished} from "../../actions/appStateActions";
+import {withStyles} from "@material-ui/core/styles";
+import {Tooltip} from "@material-ui/core";
+
+const TextOnlyTooltip = withStyles({
+    tooltip: {
+        color: "black",
+        backgroundColor: "lightgray",
+        opacity: 0.5,
+        fontSize: "1em"
+    }
+})(Tooltip);
 
 class S3Table extends Component {
     constructor(props) {
@@ -51,8 +65,8 @@ class S3Table extends Component {
     }
 
     fetchData = () => {
-        const {processingInitiated} = this.props;
-        if (processingInitiated) {
+        const {isProcessingInitiated} = this.props;
+        if (isProcessingInitiated) {
             this.onGetData();
         }
     }
@@ -65,7 +79,6 @@ class S3Table extends Component {
         const that = this;
         Storage.list('csv/', { level: 'protected' })
             .then(result => {
-                console.log("Retrieved CSV files from S3");
                 for (var i in result) {
                     const date = (result[i].lastModified).toUTCString();
                     const obj = { name: result[i].key.replace("csv/",""), last_modified: date, size: result[i].size };
@@ -73,15 +86,18 @@ class S3Table extends Component {
                 }
                 fileList.sort((a,b) => Date.parse(b.last_modified) - Date.parse(a.last_modified));
                 const {numFiles} =  that.state;
-                const {processingFinished, processingInitiated} = that.props;
+                const {processingFinished, isProcessingInitiated, enqueueAppNotification} = that.props;
                 if (fileList.length > numFiles) {
-                    processingFinished();
                     this.setState({
                         refreshBtnDisabled: false,
                     })
+                    if (isProcessingInitiated) {
+                        enqueueAppNotification({type: "success", message: "File processing completed!"});
+                    }
+                    processingFinished();
                 }
                 this.setState({ files: fileList, numFiles: fileList.length});
-                if (!processingInitiated) {
+                if (!isProcessingInitiated) {
                     this.setState({
                         refreshBtnDisabled: false,
                     })
@@ -119,12 +135,10 @@ class S3Table extends Component {
 
     async removeData(key) {
         Storage.remove("csv/"+key, { level: 'protected' })
-            .then(result => console.log(result))
+            .then()
             .catch(err => console.log(err));
         var arr = [...this.state.files];
-        console.log(key);
         var index = arr.findIndex(x => x.name === key);
-        console.log(`index is ${index}`);
         if (index !== -1) {
             arr.splice(index, 1);
             this.setState({ files: arr, numFiles: arr.length });
@@ -133,6 +147,7 @@ class S3Table extends Component {
 
     render() {
         const {refreshBtnDisabled} = this.state;
+        const {isProcessingInitiated} = this.props;
         return (
                 <Grid style={{marginRight: "1.66%"}}>
                     <Grid.Row>
@@ -142,7 +157,7 @@ class S3Table extends Component {
                                     <Grid.Row style={{paddingTop: "0px"}}>
                                         <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
                                             <div className={"files-wrapper-top"}>
-                                                <span className={"processed-files-header"}><strong>Processed Files</strong></span>
+                                                <span className={"processed-files-header"}>Processed Files (CSV)</span>
                                             </div>
                                         </Grid.Column>
                                     </Grid.Row>
@@ -164,7 +179,7 @@ class S3Table extends Component {
                                             }
                                         </Grid.Column>
                                         <Grid.Column width={9} textAlign={"left"} verticalAlign={"middle"}>
-                                            <span className={"refresh-btn-message"}>Please click on the refresh button to update the table.</span>
+                                            <span className={"refresh-btn-message"}>{(isProcessingInitiated)? <span>Please wait while your file is processed.</span> : <span>Click on the refresh button to update the table.</span>}</span>
                                         </Grid.Column>
                                         <Grid.Column width={4}>
 
@@ -173,82 +188,101 @@ class S3Table extends Component {
                                     <Divider />
                                     <Grid.Row>
                                         <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
-                                            <div style={{border: "1px solid red", borderRadius: "6px"}}>
+                                            <div className={"list-header"} >
                                                 <Grid>
-                                                    <Grid.Row columns={5} style={{paddingLeft: "0px", marginLeft: "20px", marginRight: "20px", paddingRight: "0px"}}>
-                                                        <Grid.Column style={{border: "1px solid yellow"}}>
-                                                            Source File
+                                                    <Grid.Row columns={5} style={{paddingTop: "10px", paddingBottom: "10px", paddingLeft: "0px", marginLeft: "20px", marginRight: "20px", paddingRight: "0px"}}>
+                                                        <Grid.Column width={3} textAlign={"left"} verticalAlign={"middle"}>
+                                                            <span className={"list-header-title"}>Source File</span>
                                                         </Grid.Column>
-                                                        <Grid.Column style={{border: "1px solid blue"}}>
-                                                            Date
+                                                        <Grid.Column width={6} textAlign={"left"} verticalAlign={"middle"}>
+                                                            <span className={"list-header-title"}>Date</span>
                                                         </Grid.Column>
-                                                        <Grid.Column style={{border: "1px solid yellow"}}>
-                                                            Size
+                                                        <Grid.Column width={3} textAlign={"center"} verticalAlign={"middle"}>
+                                                            <span className={"list-header-title"}>Size (Bytes)</span>
                                                         </Grid.Column>
-                                                        <Grid.Column style={{border: "1px solid blue"}}>
-                                                            Download
+                                                        <Grid.Column width={2} textAlign={"center"} verticalAlign={"middle"}>
+                                                            <span className={"list-header-title"}>Download</span>
                                                         </Grid.Column>
-                                                        <Grid.Column style={{border: "1px solid yellow"}}>
-                                                            Delete
+                                                        <Grid.Column width={2} textAlign={"center"} verticalAlign={"middle"}>
+                                                            <TextOnlyTooltip title={"Delete"} aria-setsize="15" placement="top">
+                                                                <span className={"list-header-title delete-icon"}><DeleteOutlineIcon /></span>
+                                                            </TextOnlyTooltip>
                                                         </Grid.Column>
                                                     </Grid.Row>
                                                 </Grid>
                                             </div>
-                                            <Table celled compact>
-                                                <Table.Header>
-                                                    <Table.Row>
-                                                        <Table.HeaderCell>Source File</Table.HeaderCell>
-                                                        <Table.HeaderCell>Date</Table.HeaderCell>
-                                                        <Table.HeaderCell>File Size (Bytes)</Table.HeaderCell>
-                                                        <Table.HeaderCell>Download</Table.HeaderCell>
-                                                        <Table.HeaderCell>Delete</Table.HeaderCell>
-                                                    </Table.Row>
-                                                </Table.Header>
-                                                <Table.Body>
-                                                    {this.state.files && this.state.files.map(({name, last_modified, size}) => {
-                                                        let sourceIndex =  name.lastIndexOf("_")+1;
-                                                        let sourceNameWithExt = name.substr(sourceIndex, name.length).toLowerCase();
-                                                        let sourceNameWithoutExt = sourceNameWithExt.replace(/\.[^/.]+$/, "");
-                                                        let source = sourceNameWithoutExt.replace("-", ".");
-                                                        return (
-                                                            <Table.Row key={name}>
-                                                                <Table.Cell>{source}</Table.Cell>
-                                                                <Table.Cell>{last_modified}</Table.Cell>
-                                                                <Table.Cell>{size}</Table.Cell>
-                                                                <Table.Cell>
+                                            <br/>
+                                        </Grid.Column>
+                                    </Grid.Row>
+                                    </Grid>
+                                    <Grid className={"files-list"}>
+                                    {this.state.files && this.state.files.map(({name, last_modified, size}) => {
+                                        let strippedName = name.substring(37,);
+                                        let dotIndex =  strippedName.lastIndexOf(".");
+                                        let sourceNameWithExt = strippedName.substr(0, dotIndex);
+                                        let sourceExtIndex = sourceNameWithExt.lastIndexOf("-");
+                                        let firstSegment = sourceNameWithExt.substr(0, sourceExtIndex);
+                                        let lastSegment = sourceNameWithExt.substr(sourceExtIndex + 1);
+                                        let source = firstSegment + "." + lastSegment;
+                                        let sourceOriginal = source;
+                                        if (source.length > 20) {
+                                            source = source.substr(0, 7) + "..." + source.substr(source.length - 8);
+                                        }
+                                        return(
+                                            <Grid.Row key={name} className={"list-item-container"}>
+                                                <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
+                                                    <div className={"list-item"}>
+                                                        <Grid>
+                                                            <Grid.Row columns={5} style={{paddingTop: "2px", paddingBottom: "2px", paddingLeft: "0px", marginLeft: "20px", marginRight: "20px", paddingRight: "0px"}}>
+                                                                <Grid.Column width={3} textAlign={"left"} verticalAlign={"middle"}>
+                                                                    <TextOnlyTooltip title={sourceOriginal} aria-setsize="15" placement="right" >
+                                                                    <span className={"list-header-title"}>{source}</span>
+                                                                    </TextOnlyTooltip>
+                                                                </Grid.Column>
+                                                                <Grid.Column width={6} textAlign={"left"} verticalAlign={"middle"}>
+                                                                    <span className={"list-header-title"}>{last_modified}</span>
+                                                                </Grid.Column>
+                                                                <Grid.Column width={3} textAlign={"center"} verticalAlign={"middle"}>
+                                                                    <span className={"list-header-title"}>{size}</span>
+                                                                </Grid.Column>
+                                                                <Grid.Column width={2} textAlign={"center"} verticalAlign={"middle"}>
                                                                     <Grid>
                                                                         <Grid.Row columns={1}>
                                                                             <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
                                                                                 <IconButton
                                                                                     onClick={() => this.downloadData(name)}
                                                                                 >
-                                                                                    <GetAppIcon style={{color: "lightgreen"}} />
+                                                                                    <GetAppIcon style={{color: "#313a45"}} />
                                                                                 </IconButton>
                                                                             </Grid.Column>
                                                                         </Grid.Row>
                                                                     </Grid>
-                                                                </Table.Cell>
-                                                                <Table.Cell>
+                                                                </Grid.Column>
+                                                                <Grid.Column width={2} textAlign={"right"} verticalAlign={"middle"}>
                                                                     <Grid>
                                                                         <Grid.Row columns={1}>
                                                                             <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
-                                                                                <IconButton
-                                                                                    onClick={() => this.removeData(name)}
-                                                                                >
-                                                                                    <DeleteForeverIcon style={{color: "red"}} />
-                                                                                </IconButton>
+                                                                                <TextOnlyTooltip title={"Delete"} aria-setsize="15" placement="bottom">
+                                                                                    <IconButton
+                                                                                        onClick={() => this.removeData(name)}
+                                                                                    >
+                                                                                        <DeleteForeverIcon style={{color: "red"}} />
+                                                                                    </IconButton>
+                                                                                </TextOnlyTooltip>
                                                                             </Grid.Column>
                                                                         </Grid.Row>
                                                                     </Grid>
-                                                                </Table.Cell>
-                                                            </Table.Row>
-                                                        )
-                                                    })}
-                                                </Table.Body>
-                                            </Table>
-                                        </Grid.Column>
-                                    </Grid.Row>
-                                </Grid>
+                                                                </Grid.Column>
+                                                            </Grid.Row>
+                                                        </Grid>
+                                                    </div>
+                                                </Grid.Column>
+                                            </Grid.Row>
+                                        )
+                                    })}
+                                    </Grid>
+                                <br/>
+                                <br/>
                             </div>
                         </Grid.Column>
                     </Grid.Row>
@@ -259,13 +293,14 @@ class S3Table extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        processingFinished: state.appState.processingFinished,
-        processingInitiated: state.appState.processingInitiated,
+        isProcessingInitiated: state.appState.processingInitiated,
+        notifications: state.notifications.alerts,
     };
 };
 
 const mapDispatchToProps = {
-    processingFinished
+    processingFinished,
+    enqueueAppNotification
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(S3Table);
