@@ -191,10 +191,10 @@ class S3Table extends Component {
                                             <div className={"list-header"} >
                                                 <Grid>
                                                     <Grid.Row columns={5} style={{paddingTop: "10px", paddingBottom: "10px", paddingLeft: "0px", marginLeft: "20px", marginRight: "20px", paddingRight: "0px"}}>
-                                                        <Grid.Column width={3} textAlign={"left"} verticalAlign={"middle"}>
+                                                        <Grid.Column width={4} textAlign={"left"} verticalAlign={"middle"}>
                                                             <span className={"list-header-title"}>Source File</span>
                                                         </Grid.Column>
-                                                        <Grid.Column width={6} textAlign={"left"} verticalAlign={"middle"}>
+                                                        <Grid.Column width={5} textAlign={"left"} verticalAlign={"middle"}>
                                                             <span className={"list-header-title"}>Date</span>
                                                         </Grid.Column>
                                                         <Grid.Column width={3} textAlign={"center"} verticalAlign={"middle"}>
@@ -228,19 +228,20 @@ class S3Table extends Component {
                                         if (source.length > 20) {
                                             source = source.substr(0, 7) + "..." + source.substr(source.length - 8);
                                         }
+                                        let localTime = new Date(last_modified).toLocaleString();
                                         return(
                                             <Grid.Row key={name} className={"list-item-container"}>
                                                 <Grid.Column textAlign={"center"} verticalAlign={"middle"}>
                                                     <div className={"list-item"}>
                                                         <Grid>
                                                             <Grid.Row columns={5} style={{paddingTop: "2px", paddingBottom: "2px", paddingLeft: "0px", marginLeft: "20px", marginRight: "20px", paddingRight: "0px"}}>
-                                                                <Grid.Column width={3} textAlign={"left"} verticalAlign={"middle"}>
+                                                                <Grid.Column width={4} textAlign={"left"} verticalAlign={"middle"}>
                                                                     <TextOnlyTooltip title={sourceOriginal} aria-setsize="15" placement="right" >
                                                                     <span className={"list-header-title"}>{source}</span>
                                                                     </TextOnlyTooltip>
                                                                 </Grid.Column>
-                                                                <Grid.Column width={6} textAlign={"left"} verticalAlign={"middle"}>
-                                                                    <span className={"list-header-title"}>{last_modified}</span>
+                                                                <Grid.Column width={5} textAlign={"left"} verticalAlign={"middle"}>
+                                                                    <span className={"list-header-title"}>{localTime}</span>
                                                                 </Grid.Column>
                                                                 <Grid.Column width={3} textAlign={"center"} verticalAlign={"middle"}>
                                                                     <span className={"list-header-title"}>{size}</span>
