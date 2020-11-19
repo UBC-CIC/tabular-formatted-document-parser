@@ -14,6 +14,11 @@ import Button from "@material-ui/core/Button";
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
+import RadioGroup from "@material-ui/core/RadioGroup";
+import Radio from "@material-ui/core/Radio";
+import FormControl from "@material-ui/core/FormControl";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import FormLabel from "@material-ui/core/FormLabel";
 import {initiateProcessing, clearProcessingState} from "../../actions/appStateActions";
 
 
@@ -43,6 +48,9 @@ class S3Upload extends Component {
             isProcessing: false,
             loadingProgress: 0,
             loadingInterval: null,
+            displaySpecificPages: false,
+            pageOption: "all",
+            pageFilter: "none",
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -54,18 +62,43 @@ class S3Upload extends Component {
         this.setState({confidence: conf});
     }
 
+    handlePageSelectorChange = (e) => {
+        e.preventDefault();
+        if (e.target.value === "specific") {
+            this.setState({
+                displaySpecificPages: true,
+                pageOption: "specific",
+            })
+        } else {
+            this.setState({
+                displaySpecificPages: false,
+                pageOption: "all",
+                pageFilter: "none",
+            })
+        }
+    }
+
+    handlePageFilterChange = (e) => {
+        e.preventDefault();
+        this.setState({
+            pageFilter: e.target.value,
+        })
+    }
+
     componentDidUpdate(prevProps) {
         if (this.props.processingFinished !== prevProps.processingFinished) {
             if (this.props.processingFinished) {
                 const {loadingInterval} = this.state;
                 const {clearProcessingState} = this.props;
                 clearInterval(loadingInterval);
+                // set loadingProgess
                 this.setState({
                     loadingProgress: 100,
                 });
                 this.setState({
                     isProcessing: false,
                     loadingProgress: 0,
+
                 })
                 clearProcessingState();
             }
@@ -84,6 +117,9 @@ class S3Upload extends Component {
                 displayFileOptions: true,
                 invalidFileType: false,
                 fileName: fileName,
+                displaySpecificPages: false,
+                pageOption: "all",
+                pageFilter: "none",
             })
         } else {
             file.value = "";
@@ -96,14 +132,22 @@ class S3Upload extends Component {
     async handleSubmit(e) {
         e.preventDefault();
         const {initiateProcessing} = this.props;
+        const {pageOption} = this.state;
         initiateProcessing();
         const confidence = parseInt(document.getElementById("confidence").value);
-        const pages = document.getElementById("pages").value.split(",");
+        let pages = [];
+        if (pageOption !== "all") {
+            let pageInput = document.getElementById("pages").value.split(",");
+            pages = this.formatPages(pageInput);
+        }
         const visibility = 'protected';
         const selectedFile = document.getElementById("fileUpload").files;
         if (!selectedFile.length) {
             return alert("Please choose a file to upload first!");
         }
+        this.setState({
+            isProcessing: true,
+        })
         const file = selectedFile[0];
         const fileName = file.name;
         let info;
@@ -111,9 +155,6 @@ class S3Upload extends Component {
         const mimeType = fileName.slice(fileName.indexOf('.')+1);
         const keyName = uuid().concat("_").concat(fileName.replace(/\.[^/.]+$/, "")).concat("-" + mimeType);
         const key = `${keyName}${extension && '.'}${extension}`;
-        this.setState({
-            isProcessing: true,
-        })
         const thisState = this;
         Storage.put(key, file, {
             progressCallback(progress) {
@@ -147,6 +188,39 @@ class S3Upload extends Component {
         });
     }
 
+    formatPages = (pageInput) => {
+
+        let pageArray = [];
+        for (let value of pageInput) {
+            let rangeIndex = value.lastIndexOf("-");
+            if (rangeIndex !== -1) {
+                let rangeStart = Number(value.substring(0, rangeIndex));
+                let rangeEnd = Number(value.substring(rangeIndex+1, value.length));
+                for (let i = rangeStart; i < rangeEnd+1; i++) {
+                    if (this.passesFilter(i)) {
+                        pageArray.push(i.toString());
+                    }
+                }
+            } else {
+                let num = Number(value);
+                if (this.passesFilter(num)) {
+                    pageArray.push(num.toString());
+                }
+            }
+        }
+
+        return pageArray;
+    }
+
+    passesFilter = (number) => {
+        const {pageFilter} = this.state;
+        if (pageFilter === "odd" && (number % 2 !== 0)) {
+            return true;
+        } else if (pageFilter === "even" && (number % 2 === 0)) {
+            return true;
+        } else return pageFilter === "none";
+    }
+
     setProcessingTimeout = () => {
         let loadingInterval = window.setInterval(setProgressBar, 4800);
         this.setState({
@@ -166,7 +240,8 @@ class S3Upload extends Component {
     }
 
     render() {
-        const {displayFileOptions, invalidFileType, fileName, isProcessing, loadingProgress, confidence} = this.state;
+        const {displayFileOptions, invalidFileType, fileName, isProcessing, loadingProgress,
+            confidence, displaySpecificPages, pageOption, pageFilter} = this.state;
         return (
             <Grid style={{marginLeft: "1.66%"}}>
                 <Grid.Row>
@@ -264,21 +339,56 @@ class S3Upload extends Component {
                                                                          <Grid>
                                                                              <Grid.Row style={{paddingBottom: "0px"}}>
                                                                                  <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
-                                                                                     <label className={"label"} htmlFor="pages"><strong>Specific Pages (separated with commas):</strong></label>
+                                                                                     <label className={"label"} htmlFor="pageOption"><strong>Page Options:</strong></label>
                                                                                  </Grid.Column>
                                                                              </Grid.Row>
-                                                                             <Grid.Row style={{padding: "0px"}}>
-                                                                                 <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
-                                                                                     <div className="ui input input-value-box">
-                                                                                         <input id="pages" type="text" placeholder={"eg. 1,3,5,7"}/>
-                                                                                     </div>
+                                                                             <Grid.Row style={{paddingTop: "0px", paddingBottom: "0px"}}>
+                                                                                 <Grid.Column>
+                                                                                     <FormControl component={"fieldset"}>
+                                                                                         <RadioGroup row aria-label="page-options" name="pageOption" value={pageOption} onChange={this.handlePageSelectorChange}>
+                                                                                             <FormControlLabel value="all" control={<Radio style={{color: "#012144"}}/>} label="All" style={{paddingTop: "0px", paddingBottom: "0px"}}/>
+                                                                                             <FormControlLabel value="specific" control={<Radio style={{color: "#012144"}} />} label="Specific Pages" style={{paddingTop: "0px", paddingBottom: "0px"}} />
+                                                                                         </RadioGroup>
+                                                                                     </FormControl>
                                                                                  </Grid.Column>
                                                                              </Grid.Row>
                                                                          </Grid>
+                                                                         {(displaySpecificPages)?
+                                                                             <Grid>
+                                                                                 <Grid.Row style={{paddingBottom: "0px"}}>
+                                                                                     <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                                                         <label className={"label"} htmlFor="pages"><strong>*Specific Pages (separated with commas):</strong></label>
+                                                                                     </Grid.Column>
+                                                                                 </Grid.Row>
+                                                                                 <Grid.Row style={{padding: "0px"}}>
+                                                                                     <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                                                         <div className="ui input input-value-box">
+                                                                                             <input id="pages" type="text" placeholder={"eg. 1-6,9,11"} required={true}/>
+                                                                                         </div>
+                                                                                     </Grid.Column>
+                                                                                 </Grid.Row>
+                                                                                 <Grid.Row>
+                                                                                     <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                                                         <span>
+                                                                                             <label className={"label"} htmlFor="pageFilter"><strong>Page Filter: </strong></label>
+                                                                                             <FormControl component={"fieldset"} style={{padding: "0px", marginTop: "-10px"}}>
+                                                                                                 <RadioGroup row aria-label="page-filter" name="pageFilter" value={pageFilter} onChange={this.handlePageFilterChange}>
+                                                                                                     <FormControlLabel value="none" control={<Radio style={{color: "orange"}}/>} label="None" style={{padding: "0px"}}/>
+                                                                                                     <FormControlLabel value="even" control={<Radio style={{color: "orange"}} />} label="Even Only" style={{padding: "0px"}}/>
+                                                                                                     <FormControlLabel value="odd" control={<Radio style={{color: "orange"}} />} label="Odd Only" style={{padding: "0px"}}/>
+                                                                                                </RadioGroup>
+                                                                                            </FormControl>
+                                                                                         </span>
+                                                                                     </Grid.Column>
+                                                                                 </Grid.Row>
+                                                                             </Grid>
+                                                                             :
+                                                                             null
+                                                                         }
                                                                          <br/>
                                                                          <br/>
                                                                          <Grid>
-                                                                             <Grid.Row style={{paddingBottom: "0px"}}>
+                                                                             <Grid.Row style={{paddingBottom: "0px", paddingTop: "0px"}}>
                                                                                  <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
                                                         <span>
                                                             <label className={"label"} htmlFor="confidence"><strong>*Confidence (0-100):</strong></label>
@@ -295,7 +405,9 @@ class S3Upload extends Component {
                                                                                      <div className={"ui input input-value-box"}>
                                                                                          <input type="number" id="confidence" min="0" max="100"
                                                                                                 value={confidence} label="Confidence (0-100)"
-                                                                                                onChange={this.handleChange}/>
+                                                                                                onChange={this.handleChange}
+                                                                                         required={true}
+                                                                                         />
                                                                                      </div>
                                                                                  </Grid.Column>
                                                                              </Grid.Row>
