@@ -10,7 +10,7 @@ import IconButton from '@material-ui/core/IconButton';
 import {enqueueAppNotification} from "../../actions/notificationActions";
 
 import "./S3Table.css";
-import {processingFinished} from "../../actions/appStateActions";
+import {processingFinished, fetchStatus} from "../../actions/appStateActions";
 import {withStyles} from "@material-ui/core/styles";
 import {Tooltip} from "@material-ui/core";
 
@@ -36,6 +36,7 @@ class S3Table extends Component {
             numFiles: 0,
             refreshBtnDisabled: false,
             refreshInterval: null,
+            currentFileKey: null,
         }
 
         this.componentDidMount = this.componentDidMount.bind(this);
@@ -64,9 +65,21 @@ class S3Table extends Component {
         })
     }
 
+    componentDidUpdate(prevProps) {
+        if (this.props.currentFileKey !== prevProps.currentFileKey) {
+           this.setState({
+               currentFileKey: this.props.currentFileKey,
+           })
+        }
+    }
+
     fetchData = () => {
-        const {isProcessingInitiated} = this.props;
+        const {isProcessingInitiated, fetchStatus} = this.props;
+        const {currentFileKey} = this.state;
         if (isProcessingInitiated) {
+            if (currentFileKey) {
+                fetchStatus({id: currentFileKey});
+            }
             this.onGetData();
         }
     }
@@ -296,12 +309,14 @@ const mapStateToProps = (state) => {
     return {
         isProcessingInitiated: state.appState.processingInitiated,
         notifications: state.notifications.alerts,
+        currentFileKey: state.appState.currentFileKey,
     };
 };
 
 const mapDispatchToProps = {
     processingFinished,
-    enqueueAppNotification
+    enqueueAppNotification,
+    fetchStatus
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(S3Table);
