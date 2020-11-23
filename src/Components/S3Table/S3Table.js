@@ -50,18 +50,6 @@ class S3Table extends Component {
         } catch (err) {
             console.log(err);
         }
-        const interval = window.setInterval(this.fetchData, 30000);
-        this.setState({
-            interval: interval,
-        })
-    }
-
-    componentWillUnmount() {
-        const {interval} = this.state;
-        clearInterval(interval);
-        this.setState({
-            interval: null,
-        })
     }
 
     componentDidUpdate(prevProps) {
@@ -73,13 +61,24 @@ class S3Table extends Component {
 
         if (this.props.isProcessingInitiated !== prevProps.isProcessingInitiated) {
             if (this.props.isProcessingInitiated) {
+                const interval = window.setInterval(this.fetchData, 30000);
                 this.setState({
                     refreshBtnDisabled: true,
+                    interval: interval,
                 })
             } else {
+                const {interval} = this.state;
+                clearInterval(interval);
                 this.setState({
                     refreshBtnDisabled: false,
+                    interval: null,
                 })
+            }
+        }
+
+        if (this.props.status !== prevProps.status) {
+            if (this.props.status.status === "Success") {
+                this.onGetData();
             }
         }
 
@@ -92,7 +91,6 @@ class S3Table extends Component {
             if (currentFileKey) {
                 fetchStatus({id: currentFileKey});
             }
-            this.onGetData();
         }
     }
 
