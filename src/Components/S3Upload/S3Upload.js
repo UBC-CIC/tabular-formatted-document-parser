@@ -240,7 +240,9 @@ class S3Upload extends Component {
 
     passesFilter = (number) => {
         const {pageFilter} = this.state;
-        if (pageFilter === "odd" && (number % 2 !== 0)) {
+        if (number <= 0) {
+            return false;
+        } else if (pageFilter === "odd" && (number % 2 !== 0)) {
             return true;
         } else if (pageFilter === "even" && (number % 2 === 0)) {
             return true;
