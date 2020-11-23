@@ -1,0 +1,39 @@
+{
+  "auth": {
+    "uottextractfrontend2be87fcf": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  },
+  "storage": {
+    "s3396dc364": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": []
+    }
+  },
+  "function": {},
+  "api": {
+    "uofttextract": {
+      "service": "AppSync",
+      "providerPlugin": "awscloudformation",
+      "output": {
+        "authConfig": {
+          "defaultAuthentication": {
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+              "userPoolId": "authuottextractfrontend2be87fcf"
+            }
+          },
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AWS_IAM"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -39,7 +39,7 @@ class AppNotification extends React.Component{
                 open={notificationOpen}
             >
                 <Alert severity={type}
-                       style={{width: "400px", height: "55px", fontSize: "20px"}}
+                       style={{minWidth: "400px", minHeight: "55px", fontSize: "20px"}}
                        action={
                            <IconButton
                                aria-label="close"

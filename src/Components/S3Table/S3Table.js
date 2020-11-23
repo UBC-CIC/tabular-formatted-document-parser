@@ -10,7 +10,7 @@ import IconButton from '@material-ui/core/IconButton';
 import {enqueueAppNotification} from "../../actions/notificationActions";
 
 import "./S3Table.css";
-import {processingFinished} from "../../actions/appStateActions";
+import {processingFinished, fetchStatus} from "../../actions/appStateActions";
 import {withStyles} from "@material-ui/core/styles";
 import {Tooltip} from "@material-ui/core";
 
@@ -33,9 +33,9 @@ class S3Table extends Component {
                 direction: 'desc'
             },
             files: [],
-            numFiles: 0,
             refreshBtnDisabled: false,
             refreshInterval: null,
+            currentFileKey: null,
         }
 
         this.componentDidMount = this.componentDidMount.bind(this);
@@ -64,9 +64,34 @@ class S3Table extends Component {
         })
     }
 
+    componentDidUpdate(prevProps) {
+        if (this.props.currentFileKey !== prevProps.currentFileKey) {
+           this.setState({
+               currentFileKey: this.props.currentFileKey,
+           })
+        }
+
+        if (this.props.isProcessingInitiated !== prevProps.isProcessingInitiated) {
+            if (this.props.isProcessingInitiated) {
+                this.setState({
+                    refreshBtnDisabled: true,
+                })
+            } else {
+                this.setState({
+                    refreshBtnDisabled: false,
+                })
+            }
+        }
+
+    }
+
     fetchData = () => {
-        const {isProcessingInitiated} = this.props;
+        const {isProcessingInitiated, fetchStatus} = this.props;
+        const {currentFileKey} = this.state;
         if (isProcessingInitiated) {
+            if (currentFileKey) {
+                fetchStatus({id: currentFileKey});
+            }
             this.onGetData();
         }
     }
@@ -80,14 +105,25 @@ class S3Table extends Component {
         Storage.list('csv/', { level: 'protected' })
             .then(result => {
                 for (var i in result) {
+                    const name = result[i].key.replace("csv/","");
+                    let keyWithoutExt = name.replace(".csv", "");
+                    let keyExtIndex = keyWithoutExt.lastIndexOf("-");
+                    let key = keyWithoutExt.concat(".").concat(keyWithoutExt.substring(keyExtIndex + 1));
+                    let strippedName = name.substring(37,);
+                    let dotIndex =  strippedName.lastIndexOf(".");
+                    let sourceNameWithExt = strippedName.substr(0, dotIndex);
+                    let sourceExtIndex = sourceNameWithExt.lastIndexOf("-");
+                    let firstSegment = sourceNameWithExt.substr(0, sourceExtIndex);
+                    let lastSegment = sourceNameWithExt.substr(sourceExtIndex + 1);
+                    let source = firstSegment + "." + lastSegment;
                     const date = (result[i].lastModified).toUTCString();
-                    const obj = { name: result[i].key.replace("csv/",""), last_modified: date, size: result[i].size };
+                    const obj = { name: name, source: source, key: key, last_modified: date, size: result[i].size };
                     fileList.push(obj);
                 }
                 fileList.sort((a,b) => Date.parse(b.last_modified) - Date.parse(a.last_modified));
-                const {numFiles} =  that.state;
+                const {currentFileKey} =  that.state;
                 const {processingFinished, isProcessingInitiated, enqueueAppNotification} = that.props;
-                if (fileList.length > numFiles) {
+                if (fileList.some(file => file.key === currentFileKey)) {
                     this.setState({
                         refreshBtnDisabled: false,
                     })
@@ -96,7 +132,7 @@ class S3Table extends Component {
                     }
                     processingFinished();
                 }
-                this.setState({ files: fileList, numFiles: fileList.length});
+                this.setState({ files: fileList });
                 if (!isProcessingInitiated) {
                     this.setState({
                         refreshBtnDisabled: false,
@@ -141,7 +177,7 @@ class S3Table extends Component {
         var index = arr.findIndex(x => x.name === key);
         if (index !== -1) {
             arr.splice(index, 1);
-            this.setState({ files: arr, numFiles: arr.length });
+            this.setState({ files: arr });
         }
     }
 
@@ -216,14 +252,7 @@ class S3Table extends Component {
                                     </Grid.Row>
                                     </Grid>
                                     <Grid className={"files-list"}>
-                                    {this.state.files && this.state.files.map(({name, last_modified, size}) => {
-                                        let strippedName = name.substring(37,);
-                                        let dotIndex =  strippedName.lastIndexOf(".");
-                                        let sourceNameWithExt = strippedName.substr(0, dotIndex);
-                                        let sourceExtIndex = sourceNameWithExt.lastIndexOf("-");
-                                        let firstSegment = sourceNameWithExt.substr(0, sourceExtIndex);
-                                        let lastSegment = sourceNameWithExt.substr(sourceExtIndex + 1);
-                                        let source = firstSegment + "." + lastSegment;
+                                    {this.state.files && this.state.files.map(({name, source, last_modified, size}) => {
                                         let sourceOriginal = source;
                                         if (source.length > 20) {
                                             source = source.substr(0, 7) + "..." + source.substr(source.length - 8);
@@ -296,12 +325,15 @@ const mapStateToProps = (state) => {
     return {
         isProcessingInitiated: state.appState.processingInitiated,
         notifications: state.notifications.alerts,
+        currentFileKey: state.appState.currentFileKey,
+        status: state.appState.status,
     };
 };
 
 const mapDispatchToProps = {
     processingFinished,
-    enqueueAppNotification
+    enqueueAppNotification,
+    fetchStatus
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(S3Table);

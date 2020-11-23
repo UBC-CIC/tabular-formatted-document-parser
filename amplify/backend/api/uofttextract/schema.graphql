@@ -1,0 +1,11 @@
+type Status @model
+@auth(rules: [
+  { allow:  private, provider: iam },
+  { allow:  private, provider: userPools }, 
+  { allow: owner }
+]) {
+  id: ID!
+  status: String
+  errorMessage: String
+  expirationTime: Int!
+}

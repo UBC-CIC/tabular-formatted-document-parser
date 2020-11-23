@@ -18,8 +18,9 @@ import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormLabel from "@material-ui/core/FormLabel";
-import {initiateProcessing, clearProcessingState} from "../../actions/appStateActions";
+import {initiateProcessing, clearProcessingState, addProcessingStatus, updateProcessingStatus, processingFinished} from "../../actions/appStateActions";
+import {enqueueAppNotification} from "../../actions/notificationActions";
+
 
 
 
@@ -51,6 +52,8 @@ class S3Upload extends Component {
             displaySpecificPages: false,
             pageOption: "all",
             pageFilter: "none",
+            status: "Ready",
+            errorMessage: null,
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -86,8 +89,8 @@ class S3Upload extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.processingFinished !== prevProps.processingFinished) {
-            if (this.props.processingFinished) {
+        if (this.props.isProcessingFinished !== prevProps.isProcessingFinished) {
+            if (this.props.isProcessingFinished) {
                 const {loadingInterval} = this.state;
                 const {clearProcessingState} = this.props;
                 clearInterval(loadingInterval);
@@ -98,9 +101,28 @@ class S3Upload extends Component {
                 this.setState({
                     isProcessing: false,
                     loadingProgress: 0,
-
                 })
                 clearProcessingState();
+            }
+        }
+
+        if (this.props.status !== prevProps.status) {
+            if (this.props.status.status === "Error") {
+                const {loadingInterval} = this.state;
+                const {clearProcessingState, enqueueAppNotification, processingFinished} = this.props;
+                clearInterval(loadingInterval);
+                this.setState({
+                    loadingProgress: 0,
+                    isProcessing: false,
+                    status: "Error",
+                });
+                processingFinished();
+                clearProcessingState();
+                enqueueAppNotification({type: "error", message: "File processing error occurred: " + this.props.status.errorMessage});
+            } else {
+                this.setState({
+                    status: this.props.status.status,
+                })
             }
         }
     }
@@ -120,6 +142,7 @@ class S3Upload extends Component {
                 displaySpecificPages: false,
                 pageOption: "all",
                 pageFilter: "none",
+                status: "Ready",
             })
         } else {
             file.value = "";
@@ -131,7 +154,7 @@ class S3Upload extends Component {
 
     async handleSubmit(e) {
         e.preventDefault();
-        const {initiateProcessing} = this.props;
+        const {initiateProcessing, addProcessingStatus, updateProcessingStatus} = this.props;
         const {pageOption} = this.state;
         initiateProcessing();
         const confidence = parseInt(document.getElementById("confidence").value);
@@ -147,6 +170,7 @@ class S3Upload extends Component {
         }
         this.setState({
             isProcessing: true,
+            state: "Uploading",
         })
         const file = selectedFile[0];
         const fileName = file.name;
@@ -155,6 +179,7 @@ class S3Upload extends Component {
         const mimeType = fileName.slice(fileName.indexOf('.')+1);
         const keyName = uuid().concat("_").concat(fileName.replace(/\.[^/.]+$/, "")).concat("-" + mimeType);
         const key = `${keyName}${extension && '.'}${extension}`;
+        addProcessingStatus({id: key, status: "Uploading", expirationTime: Math.floor(new Date().getTime()/1000.0) + 604800});
         const thisState = this;
         Storage.put(key, file, {
             progressCallback(progress) {
@@ -174,9 +199,11 @@ class S3Upload extends Component {
                     pages: pages,
                     file_type: mimeType
                 }
+                updateProcessingStatus({id: key, status: "Processing"});
                 Storage.put(`file_info/${keyName}.json`, JSON.stringify(info), { level: visibility, contentType: 'json' })
             },
             (err) => {
+                updateProcessingStatus({id: key, status: "Error", errorMessage: "File processing error occurred: " + err.message});
                 return alert('Error uploading file: ', err.message);
             }
         ).then(() => {
@@ -214,7 +241,9 @@ class S3Upload extends Component {
 
     passesFilter = (number) => {
         const {pageFilter} = this.state;
-        if (pageFilter === "odd" && (number % 2 !== 0)) {
+        if (number <= 0) {
+            return false;
+        } else if (pageFilter === "odd" && (number % 2 !== 0)) {
             return true;
         } else if (pageFilter === "even" && (number % 2 === 0)) {
             return true;
@@ -241,7 +270,7 @@ class S3Upload extends Component {
 
     render() {
         const {displayFileOptions, invalidFileType, fileName, isProcessing, loadingProgress,
-            confidence, displaySpecificPages, pageOption, pageFilter} = this.state;
+            confidence, displaySpecificPages, pageOption, pageFilter, status} = this.state;
         return (
             <Grid style={{marginLeft: "1.66%"}}>
                 <Grid.Row>
@@ -276,7 +305,7 @@ class S3Upload extends Component {
                                                             </span>
                                                         </Grid.Column>
                                                     </Grid.Row>
-                                                    <Grid.Row style={{paddingTop: "5px"}}>
+                                                    <Grid.Row style={{paddingTop: "5px", paddingBottom: "0px"}}>
                                                         <Grid.Column>
                                                             <Box display="flex" alignItems="center">
                                                                 <Box width="100%" mr={1}>
@@ -289,6 +318,13 @@ class S3Upload extends Component {
                                                                     )}%`}</Typography>
                                                                 </Box>
                                                             </Box>
+                                                        </Grid.Column>
+                                                    </Grid.Row>
+                                                    <Grid.Row style={{paddingTop: "0px"}}>
+                                                        <Grid.Column textAlign={"left"} verticalAlign={"middle"}>
+                                                            <span className={"loading-message"} style={{color: "orange"}}>
+                                                                Current Stage: {status}
+                                                            </span>
                                                         </Grid.Column>
                                                     </Grid.Row>
                                                 </Grid>
@@ -458,13 +494,18 @@ class S3Upload extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        processingFinished: state.appState.processingFinished,
+        isProcessingFinished: state.appState.processingFinished,
+        status: state.appState.status,
     };
 };
 
 const mapDispatchToProps = {
     initiateProcessing,
-    clearProcessingState
+    clearProcessingState,
+    addProcessingStatus,
+    updateProcessingStatus,
+    enqueueAppNotification,
+    processingFinished
 };
 
 
