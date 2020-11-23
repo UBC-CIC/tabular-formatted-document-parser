@@ -18,7 +18,7 @@ import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-import {initiateProcessing, clearProcessingState, addProcessingStatus, updateProcessingStatus} from "../../actions/appStateActions";
+import {initiateProcessing, clearProcessingState, addProcessingStatus, updateProcessingStatus, processingFinished} from "../../actions/appStateActions";
 import {enqueueAppNotification} from "../../actions/notificationActions";
 
 
@@ -89,8 +89,8 @@ class S3Upload extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.processingFinished !== prevProps.processingFinished) {
-            if (this.props.processingFinished) {
+        if (this.props.isProcessingFinished !== prevProps.isProcessingFinished) {
+            if (this.props.isProcessingFinished) {
                 const {loadingInterval} = this.state;
                 const {clearProcessingState} = this.props;
                 clearInterval(loadingInterval);
@@ -109,13 +109,14 @@ class S3Upload extends Component {
         if (this.props.status !== prevProps.status) {
             if (this.props.status.status === "Error") {
                 const {loadingInterval} = this.state;
-                const {clearProcessingState, enqueueAppNotification} = this.props;
+                const {clearProcessingState, enqueueAppNotification, processingFinished} = this.props;
                 clearInterval(loadingInterval);
                 this.setState({
                     loadingProgress: 0,
                     isProcessing: false,
                     status: "Error",
-                })
+                });
+                processingFinished();
                 clearProcessingState();
                 enqueueAppNotification({type: "error", message: "File processing error occurred: " + this.props.status.errorMessage});
             } else {
@@ -493,7 +494,7 @@ class S3Upload extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        processingFinished: state.appState.processingFinished,
+        isProcessingFinished: state.appState.processingFinished,
         status: state.appState.status,
     };
 };
@@ -503,7 +504,8 @@ const mapDispatchToProps = {
     clearProcessingState,
     addProcessingStatus,
     updateProcessingStatus,
-    enqueueAppNotification
+    enqueueAppNotification,
+    processingFinished
 };
 
 
