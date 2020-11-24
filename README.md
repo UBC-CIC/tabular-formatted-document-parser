@@ -1,70 +1,37 @@
-# Getting Started with Create React App
+# Deployment Guide
+Before deployment, you should have the following: 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+* [AWS Account](https://aws.amazon.com/account/)
+* [GitHub Account](https://github.com)
+* [Node 10 or greater](https://nodejs.org/en/download/)
 
-## Available Scripts
+## Frontend Deployment
 
-In the project directory, you can run:
+[![One-click deployment](https://oneclick.amplifyapp.com/button.svg)](https://console.aws.amazon.com/amplify/home#/deploy?repo=https://github.com/UBC-CIC/uoft_textract_frontend)
 
-### `yarn start`
+1) Use the __1-click deployment__ button provided above and start the deployment before continuing. 
+2) Go to the [Amplify Console](https://aws.amazon.com/amplify/console/) and select the app you just created. 
+3) Wait until Provision, Build, Deploy and Verify are all green.
+4) From the Amplify console, navigate to __Backend environments__ -> __Storage__ and click on __View in S3__. We will be using this bucket later to connect to the Backend Lambda function. 
+5) Navigate to AWS DynamoDB and find the table that Amplify created. It should start with Status. Copy that for the Backend as well. 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Backend Deployment
+Deploy the backend application onto AWS Lambda function.
+### Build Instructions 
+This application requires the frontend Amplfy Application to be setup and running on the same account and region. 
+1. Run the `create_lambda.bat` script for Windows machines or `create_lambda.sh` for Linux machines and follow the prompts 
+2. The AWS Account ID can be found in the Account Settings in the Console. 
+3. The DynamoDB table name can be found by searching DynamoDB and clicking on __Tables__. The corresponding table should start with _Status_. 
+4. The region should be the same as the region you used to create the Amplify Application ie. ca-central-1. 
+3. In the AWS console, navigate to the newly created lambda function
+4. Click on the Add Trigger Option 
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+![Add Trigger](public/lambda_trigger.PNG)
 
-### `yarn test`
+4. Add a S3 create object trigger associated to the S3 bucket that Amplify created in the Frontend Deployment
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Trigger Configuration](public/lambda_trigger_2.PNG)
 
-### `yarn build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Updates
+If you make any updates to `index.py`, you must run `lambda.sh` on a machine with the same OS as Python3.8 in AWS Lambda 
+    - see [here](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python.html) for more information
