@@ -1,5 +1,5 @@
-# UoT Textract Application
-The UoT Textract Application is a prototype that demonstrates the ability to scan tabular-formatted data from PDF's and images and save the results into a CSV format. 
+# Tabular Textract Application
+The Tabular Textract Application is a prototype created for the UoT Econmoics Department with the ability to scan tabular-formatted data from PDF's and images and save the results into a CSV format. 
 
 ## Stack 
 * __Frontend__ - ReactJS on NodeJS as the core framework.
@@ -12,5 +12,5 @@ The UoT Textract Application is a prototype that demonstrates the ability to sca
 <img src="./public/architecture.png" width="800"/>
 
 ## Deployment 
-To deploy this solution into your AWS account please follow the [deployment guide](./deployment_guide.md)
+To deploy this solution into your AWS account please follow the [deployment guide](deployment_guide.md)
 
