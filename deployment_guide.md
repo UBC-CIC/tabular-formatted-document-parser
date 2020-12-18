@@ -8,25 +8,30 @@ Before deployment, you should have the following:
 
 ## Frontend Deployment
 
-1) Fork this repository.
+1) Fork then clone this repository.
 2) Delete the "team-provider-info.json" file located under the "amplify" folder. Amplify will generate a new one specific for your AWS account.
-3) In a terminal from the project root directory, enter the following command (accept all defaults):
+3) Open a browser and log into the [AWS Management Console](https://aws.amazon.com/console/). 
+4) If you haven't configured Amplify before, configure the Amplify CLI in your terminal as follows:
+```javascript
+amplify configure
+```
+5) In a terminal from the project root directory, enter the following command (accept all defaults):
 ```javascript
 amplify init
 ```
-4) Next, after the Amplify project has been initialized, in your terminal again from the project root directory, enter the following command (accept all defaults and select "Yes" for all options):
+6) Next, after the Amplify project has been initialized, in your terminal again from the project root directory, enter the following command (select "Yes" for all options):
 ```javascript
 amplify push
 ```
-5) Next, open a browser and go to the [Amplify Console](https://aws.amazon.com/amplify/console/) and select the app you just created.
-6) Next, click on the "frontend environments" tab and select "Github" under the "Host a web app" section then click **Connect branch**.
-7) Select the repository that contains the fork of this project. Click **Next**.
-8) From the *Select a backend environment* dropdown, select *dev*.
-9) Next, click on the **Create a new role** button and accept all defaults. Now click the refresh button and select the role you just created in the dropdown menu. Click **Next**.
-10) Click **Save and deploy**.
-11) Wait until Provision, Build, Deploy and Verify are all green.
-12) From the Amplify console, navigate to __Backend environments__ -> __Storage__ and click on __View in S3__. We will be using this bucket later to connect to the Backend Lambda function. 
-13) Navigate to AWS DynamoDB and find the table that Amplify created. It should start with Status. Copy that for the Backend as well. 
+7) Next, in your browser go to the AWS Amplify service page in the AWS Console. Select the app you just created.
+8) Next, click on the "frontend environments" tab and select "Github" under the "Host a web app" section then click **Connect branch**.
+9) Select the repository that contains the fork of this project. Click **Next**.
+10) From the *Select a backend environment* dropdown, select *dev*.
+11) Next, click on the **Create a new role** button and accept all defaults. Now click the refresh button and select the role you just created in the dropdown menu. Click **Next**.
+12) Click **Save and deploy**.
+13) Wait until the Provision, Build, Deploy and Verify indicators are all green.
+14) From the Amplify console, navigate to __Backend environments__ -> __Storage__ and click on __View in S3__. We will be using this bucket later to connect to the Backend Lambda function. 
+15) Navigate to AWS DynamoDB and find the table that Amplify created. It should start with Status. Copy that for the Backend as well. 
 
 ## Backend Deployment
 Deploy the backend application onto AWS Lambda function.
