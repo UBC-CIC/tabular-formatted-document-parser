@@ -30,7 +30,7 @@ amplify push
 11) Next, click on the **Create a new role** button and accept all defaults. Now click the refresh button and select the role you just created in the dropdown menu. Click **Next**.
 12) Click **Save and deploy**.
 13) Wait until the Provision, Build, Deploy and Verify indicators are all green.
-14) From the Amplify console, navigate to __Backend environments__ -> __Storage__ and click on __View in S3__. We will be using this bucket later to connect to the Backend Lambda function. 
+14) From the Amplify console, navigate to __Backend environments__ -> __File storage__ and click on __View in S3__. We will be using this bucket later to connect to the Backend Lambda function. 
 15) Navigate to AWS DynamoDB and find the table that Amplify created. It should start with Status. Copy that for the Backend as well. 
 
 ## Backend Deployment
