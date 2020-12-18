@@ -37,7 +37,7 @@ amplify push
 Deploy the backend application onto AWS Lambda function.
 ### Build Instructions 
 This application requires the frontend Amplfy Application to be setup and running on the same account and region. 
-1. Run the `create_lambda.bat` script for Windows machines or `create_lambda.sh` for Linux machines and follow the prompts 
+1. Navigate to the Lambda folder in the project repo and run the `create_lambda.bat` script for Windows machines or `create_lambda.sh` for Linux machines and follow the prompts. 
 2. The AWS Account ID can be found in the Account Settings in the Console. 
 3. The DynamoDB table name can be found by searching DynamoDB and clicking on __Tables__. The corresponding table should start with _Status_. 
 4. The region should be the same as the region you used to create the Amplify Application ie. ca-central-1. 
