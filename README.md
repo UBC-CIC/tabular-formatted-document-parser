@@ -1,5 +1,5 @@
 # Tabular Textract Application
-The Tabular Textract Application is a prototype created for the UoT Econmoics Department with the ability to scan tabular-formatted data from PDF's and images and save the results into a CSV format. 
+The Tabular Textract Application is a prototype created for the UoT Economics Department with the ability to scan tabular-formatted data from PDF's and images and save the results into a CSV format. 
 
 ## Stack 
 * __Frontend__ - ReactJS on NodeJS as the core framework.
