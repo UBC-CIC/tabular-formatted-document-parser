@@ -1,5 +1,5 @@
-# Tabular Textract Application
-The Tabular Textract Application is a prototype created for the UoT Economics Department with the ability to scan tabular-formatted data from PDF's and images and save the results into a CSV format. 
+# Amazon Textract Tabular Formatted Parser Application
+The Amazon Textract Tabular Formatted Parser Application is a prototype created for the UoT Economics Department with the ability to scan tabular-formatted data from PDF's and images and save the results into a CSV format. 
 
 ## Stack 
 * __Frontend__ - ReactJS on NodeJS as the core framework.
@@ -14,3 +14,10 @@ The Tabular Textract Application is a prototype created for the UoT Economics De
 ## Deployment 
 To deploy this solution into your AWS account please follow the [deployment guide](deployment_guide.md)
 
+## Credits
+
+This prototype was coded by the UBC Students Jack Hou and Aamir Sheergar with the guidance from the UBC CIC technical team.
+
+## License
+
+This library is licensed under the Apache 2.0 License.

@@ -239,8 +239,8 @@ def handler(event, context):
             ExpressionAttributeValues={':status': 'Error', ':err': 'AWS Botocore Error'}
         )
         return {'result': 'Error'}
-    except: 
-        logger.info("Error")
+    except Exception as e: 
+        logger.error(e)
         table.update_item(
             Key={'id': key},
             UpdateExpression='set #status = :status, #err = :err',

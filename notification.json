@@ -1,0 +1,21 @@
+{
+  "LambdaFunctionConfigurations": [
+    {
+      "Id": "PdfToCsv",
+      "LambdaFunctionArn": "%LambdaArn%",
+      "Events": [
+        "s3:ObjectCreated:*"
+      ],
+      "Filter": {
+        "Key": {
+          "FilterRules": [
+            {
+              "Name": "suffix",
+              "Value": ".json"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

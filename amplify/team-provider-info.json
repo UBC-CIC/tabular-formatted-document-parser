@@ -1,15 +1,15 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-uottextractfrontend-dev-144214-authRole",
-      "UnauthRoleArn": "arn:aws:iam::271390557877:role/amplify-uottextractfrontend-dev-144214-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::271390557877:role/amplify-uottextractfrontend-dev-144214-authRole",
+      "AuthRoleName": "amplify-uottextractfrontend-dev-122756-authRole",
+      "UnauthRoleArn": "arn:aws:iam::271390557877:role/amplify-uottextractfrontend-dev-122756-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::271390557877:role/amplify-uottextractfrontend-dev-122756-authRole",
       "Region": "ca-central-1",
-      "DeploymentBucketName": "amplify-uottextractfrontend-dev-144214-deployment",
-      "UnauthRoleName": "amplify-uottextractfrontend-dev-144214-unauthRole",
-      "StackName": "amplify-uottextractfrontend-dev-144214",
-      "StackId": "arn:aws:cloudformation:ca-central-1:271390557877:stack/amplify-uottextractfrontend-dev-144214/d2ac69f0-1e25-11eb-8155-02d778703222",
-      "AmplifyAppId": "d2kh3qob3ihmgm"
+      "DeploymentBucketName": "amplify-uottextractfrontend-dev-122756-deployment",
+      "UnauthRoleName": "amplify-uottextractfrontend-dev-122756-unauthRole",
+      "StackName": "amplify-uottextractfrontend-dev-122756",
+      "StackId": "arn:aws:cloudformation:ca-central-1:271390557877:stack/amplify-uottextractfrontend-dev-122756/cf348550-6402-11eb-8070-0299325481da",
+      "AmplifyAppId": "d3qbw07yp4grcp"
     },
     "categories": {
       "auth": {

@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    "Dicom Lambda Validation \n"
+Parameters:
+  s3Bucket:
+    Type: String
+  DynamoDbTable:
+    Type: String
+
+Globals:
+  Function:
+    AutoPublishAlias: live
+    Handler: index.handler
+    MemorySize: 768
+    Runtime: python3.8
+    Timeout: 300
+    Tracing: Active
+    
+
+Resources:
+  PdfToCsv:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: ./package.zip
+      Policies:
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        - TextractPolicy: {}
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDbTable
+        - S3CrudPolicy:
+            BucketName: !Ref s3Bucket
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref s3Bucket
+          DYNAMO_TABLE_NAME: !Ref DynamoDbTable
+
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt PdfToCsv.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:s3:::${s3Bucket}'
+
+Outputs:
+  PdfToCsvArn:
+      Value: !GetAtt PdfToCsv.Arn
