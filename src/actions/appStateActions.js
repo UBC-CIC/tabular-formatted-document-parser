@@ -1,20 +1,23 @@
-import { generateClient } from 'aws-amplify/api';
-import {createStatus, updateStatus} from "../graphql/mutations";
-import { getStatus } from '../graphql/queries';
+import { post, patch, get } from 'aws-amplify/api';
 
-const client = generateClient();
-
-
+// Name of the REST API as registered in Amplify.configure (see aws-exports.js).
+const API_NAME = 'StatusApi';
 
 //================================================---ADD NEW PROCESSING STATUS---====================================================
 
 // Add new processing status
 export const addProcessingStatus = (payload) => {
-    return (dispatch) => {
+    return async (dispatch) => {
         dispatch({type: "ADD_PROCESSING_STATUS", payload: payload});
-        client.graphql({ query: createStatus, variables: { input: payload } }).then().catch((err) => {
+        try {
+            await post({
+                apiName: API_NAME,
+                path: '/status',
+                options: { body: payload },
+            }).response;
+        } catch (err) {
             console.log("Error creating new processing status: ", err);
-        })
+        }
     }
 }
 
@@ -22,11 +25,18 @@ export const addProcessingStatus = (payload) => {
 
 // Update processing status
 export const updateProcessingStatus = (payload) => {
-    return (dispatch) => {
+    return async (dispatch) => {
         dispatch({type: "UPDATE_PROCESSING_STATUS", payload: payload});
-        client.graphql({ query: updateStatus, variables: { input: payload } }).then().catch((err) => {
-            console.log("Error creating new processing status: ", err);
-        })
+        try {
+            const { id, ...body } = payload;
+            await patch({
+                apiName: API_NAME,
+                path: `/status/${encodeURIComponent(id)}`,
+                options: { body },
+            }).response;
+        } catch (err) {
+            console.log("Error updating processing status: ", err);
+        }
     }
 }
 
@@ -34,13 +44,17 @@ export const updateProcessingStatus = (payload) => {
 
 // Fetch processing status
 export const fetchStatus = (payload) => {
-    return (dispatch) => {
-        client.graphql({ query: getStatus, variables: { id: payload.id } }).then((response) => {
-            const status = response.data.getStatus;
+    return async (dispatch) => {
+        try {
+            const { body } = await get({
+                apiName: API_NAME,
+                path: `/status/${encodeURIComponent(payload.id)}`,
+            }).response;
+            const status = await body.json();
             dispatch(fetchStatusSuccess(status));
-        }).catch((err) => {
+        } catch (err) {
             console.log("Error fetching status: ", err);
-        })
+        }
     }
 }
 

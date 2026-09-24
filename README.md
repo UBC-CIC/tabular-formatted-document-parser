@@ -2,10 +2,11 @@
 The Amazon Textract Tabular Formatted Parser Application is a prototype created for the UoT Economics Department with the ability to scan tabular-formatted data from PDFs and images and save the results into a CSV format. 
 
 ## Stack 
-* __Frontend__ - ReactJS (React 18) built with Vite.
-* __Data__ - All data is saved in Amazon S3 and Amazon DynamoDB.
-* __Auth__ - AWS Amplify and Cognito provide unique user login and authentication.
-* __Backend__ - A Python 3.13 AWS Lambda function, deployed as a container image via AWS SAM, that processes the uploaded file along with the confidence and page settings. It uses Amazon Textract to extract tabular data, stores the resulting CSV in Amazon S3, and updates the processing status in DynamoDB.
+* __Frontend__ - ReactJS (React 18) built with Vite, hosted on Amazon S3 + CloudFront.
+* __Auth__ - Amazon Cognito (User Pool + Identity Pool) for user login and authentication, accessed from the frontend via the AWS Amplify library.
+* __Data__ - Uploaded files and generated CSVs in Amazon S3; processing status in Amazon DynamoDB, accessed through a Status REST API (Amazon API Gateway + AWS Lambda) secured by a Cognito authorizer.
+* __Backend__ - A Python 3.13 AWS Lambda function, deployed as a container image, that processes the uploaded file along with the confidence and page settings. It uses Amazon Textract to extract tabular data, stores the resulting CSV in Amazon S3, and updates the processing status in DynamoDB.
+* __Infrastructure__ - All resources are defined in a single AWS SAM / CloudFormation template (`template.yaml`) and deployed with `./deploy.sh`. No Amplify CLI is required.
 
 ## High Level Architecture 
 

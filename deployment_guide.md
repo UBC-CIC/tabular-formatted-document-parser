@@ -1,63 +1,67 @@
 # Deployment Guide
-Before deployment, you should have the following: 
 
-* An AWS account with required permissions. If you do not have an AWS account, create and activate one.
-* Access to Git.
-* Docker installed and running (required by `sam build` to build the Lambda container image)
-* AWS CLI installed
-* AWS SAM CLI installed
-* Amplify CLI installed
-* Bash terminal
-* GitHub Account 
+This application deploys entirely through **AWS SAM / CloudFormation** — no Amplify CLI is required. A single `template.yaml` provisions all backend resources (Cognito, S3, DynamoDB, the Status API, and the PDF→CSV Lambda) plus the S3 + CloudFront frontend hosting.
 
-## Deployment steps
+## Prerequisites
 
-1.	**Fork** this solution repository, then **clone** your fork locally.
+* An AWS account with permissions to create the resources in `template.yaml` (Cognito, S3, DynamoDB, Lambda, API Gateway, CloudFront, IAM).
+* AWS CLI installed and configured with credentials (`aws configure`).
+* AWS SAM CLI installed.
+* Docker installed and running (required by `sam build` to build the PDF→CSV Lambda container image).
+* Node.js and npm installed (to build the React frontend).
+* A Bash terminal.
 
-2.	If you haven't configured Amplify before, configure the Amplify CLI in your terminal as follows:
+## One-command deployment
 
-    ```bash
-    amplify configure
-    ```
+From the project root:
 
-3.	In a terminal from the project root directory, enter the following command, selecting the IAM user of the AWS account you will deploy this application from (accept all defaults):
+```bash
+./deploy.sh [stack-name] [aws-region]
+```
 
-    ```bash
-    amplify init
-    ```
+Defaults: stack name `uottextract`, region `ca-central-1`.
 
-4.	After the Amplify project has been initialized, in your terminal again from the project root directory, enter the following command (select "Yes" for all options):
+The script performs the full deployment:
 
-    ```bash
-    amplify push
-    ```
+1. `sam build` — builds the PDF→CSV Lambda container image and the Status API function.
+2. `sam deploy` — creates/updates the CloudFormation stack (all backend resources + hosting bucket + CloudFront). The ECR repository for the image function and the SAM deployment bucket are created and managed automatically (`--resolve-image-repos`, `--resolve-s3`).
+3. `./generate_config.sh` — reads the stack outputs and writes `src/aws-exports.js` (the Amplify client configuration: Cognito, S3, and the Status API endpoint).
+4. `npm ci && npm run build` — builds the React frontend (Vite) into `./build`.
+5. `aws s3 sync build/ …` — publishes the build to the hosting bucket.
+6. `aws cloudfront create-invalidation …` — invalidates the CloudFront cache.
 
-5.	After Amplify successfully creates all the backend resources, execute the following command to deploy the Lambda function that pre- and post-processes the PDF files. This script automates the following steps:
+On completion the script prints the CloudFront URL (`https://<distribution>.cloudfront.net`) where the app is served.
 
-    a.	Identifies the AWS resources AWS Amplify created (the S3 bucket and DynamoDB table).
+> **First run:** if this is the first SAM deployment in your account/region, SAM will bootstrap its managed resources. If `sam deploy` prompts for configuration, run `sam deploy --guided` once to seed a `samconfig.toml`, then re-run `./deploy.sh`.
 
-    b.	Builds and deploys the AWS Lambda function as a **container image** using AWS SAM. `sam build` uses Docker to build the image defined by the `Dockerfile` (Python 3.13 base image with `poppler-utils` and the Python dependencies), and `sam deploy` pushes it to Amazon ECR and creates/updates the CloudFormation stack. The ECR repository is created and managed automatically via `--resolve-image-repos`.
+## Creating a user
 
-    c.	Configures the Amazon S3 event notification that triggers the AWS Lambda function on upload.
+The Cognito User Pool has no users initially and self-signup is available through the app's login screen (Amplify's `withAuthenticator`). Alternatively, create a user via the CLI:
 
-    ```bash
-    ./deploy_lambda.sh
-    ```
+```bash
+aws cognito-idp admin-create-user \
+  --user-pool-id <UserPoolId-from-stack-outputs> \
+  --username user@example.com \
+  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true
+```
 
-    > **First run:** if this is the first SAM deployment in your account/region, SAM may need to bootstrap its managed resources (a deployment bucket and ECR repositories). If the non-interactive deploy fails asking for configuration, run `sam deploy --guided` once from the project root to seed a `samconfig.toml`, then re-run `./deploy_lambda.sh`.
+## Redeploying frontend-only changes
 
-    > **Note:** each deployment pushes a new image to the SAM-managed ECR repository. Over time you may want to add an ECR lifecycle policy to prune old images.
+If you only changed frontend code, you can skip the backend build and just rebuild + republish:
 
-6.	In your browser, go to the AWS Amplify service page in the AWS Console and select the app you just created.
+```bash
+npm run build
+aws s3 sync build/ "s3://<HostingBucketName>/" --delete
+aws cloudfront create-invalidation --distribution-id <CloudFrontDistributionId> --paths "/*"
+```
 
-7.	Click on the "Frontend environments" tab, select "GitHub" under the "Host a web app" section, then click Connect branch.
+## Tearing down
 
-8.	Select the repository that contains your fork of this project. Click Next.
+Because this is a prototype with disposable data, the S3 buckets and DynamoDB table use `DeletionPolicy: Delete`. To remove everything:
 
-9.	From the "Select a backend environment" dropdown, select dev.
-
-10.	Click the "Create a new role" button and accept all defaults. Click the refresh button and select the role you just created in the dropdown menu. Click Next.
-
-11.	Click Save and deploy.
-
-12.	Wait until the Provision, Build, Deploy, and Verify indicators are all green.
+```bash
+# Empty the buckets first (CloudFormation cannot delete non-empty buckets).
+aws s3 rm "s3://<DataBucketName>" --recursive
+aws s3 rm "s3://<HostingBucketName>" --recursive
+sam delete --stack-name <stack-name>
+```
