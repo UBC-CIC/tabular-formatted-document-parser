@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import { Grid } from 'semantic-ui-react';
-import ExitToAppIcon from '@mui/icons-material/ExitToApp';
-import IconButton from '@mui/material/IconButton';
+import { ExitToApp as ExitToAppIcon } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 import { signOut } from "aws-amplify/auth";
 import awsLogo from '../../assets/images/PB_AWS_logo_RGB_stacked.png';
 import "./Navbar.css";

@@ -1,23 +1,28 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { uploadData } from "aws-amplify/storage";
-import { Tooltip, tooltipClasses } from "@mui/material";
+import {
+    Tooltip,
+    tooltipClasses,
+    IconButton,
+    Button,
+    LinearProgress,
+    Typography,
+    Box,
+    RadioGroup,
+    Radio,
+    FormControl,
+    FormControlLabel,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { v4 as uuid } from 'uuid';
 import {Grid, Divider} from "semantic-ui-react";
-import HelpIcon from '@mui/icons-material/Help';
-import IconButton from '@mui/material/IconButton';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import {
+    Help as HelpIcon,
+    CloudUpload as CloudUploadIcon,
+    ReportProblem as ReportProblemIcon,
+} from '@mui/icons-material';
 import "./S3Upload.css";
-import Button from "@mui/material/Button";
-import LinearProgress from '@mui/material/LinearProgress';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import RadioGroup from "@mui/material/RadioGroup";
-import Radio from "@mui/material/Radio";
-import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import {initiateProcessing, clearProcessingState, addProcessingStatus, updateProcessingStatus, processingFinished} from "../../actions/appStateActions";
 import {enqueueAppNotification} from "../../actions/notificationActions";
 

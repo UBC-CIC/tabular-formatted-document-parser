@@ -2,17 +2,18 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import { list, downloadData, remove } from "aws-amplify/storage";
 import { Grid, Divider } from "semantic-ui-react";
-import RefreshIcon from '@mui/icons-material/Refresh';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import IconButton from '@mui/material/IconButton';
+import {
+    Refresh as RefreshIcon,
+    DeleteForever as DeleteForeverIcon,
+    GetApp as GetAppIcon,
+    DeleteOutline as DeleteOutlineIcon,
+} from '@mui/icons-material';
 import {enqueueAppNotification} from "../../actions/notificationActions";
 
 import "./S3Table.css";
 import {processingFinished, fetchStatus} from "../../actions/appStateActions";
 import { styled } from "@mui/material/styles";
-import { Tooltip, tooltipClasses } from "@mui/material";
+import { Tooltip, tooltipClasses, IconButton } from "@mui/material";
 
 const TextOnlyTooltip = styled(({ className, ...props }) => (
     <Tooltip {...props} classes={{ popper: className }} />
