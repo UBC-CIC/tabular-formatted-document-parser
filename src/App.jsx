@@ -3,7 +3,7 @@ import { withAuthenticator } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
 import { connect } from "react-redux";
 import { Grid } from 'semantic-ui-react'
-import { getCurrentUser } from 'aws-amplify/auth';
+import { getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 import S3Upload from "./Components/S3Upload/S3Upload";
 import S3Table from "./Components/S3Table/S3Table";
 import Navbar from "./Components/Navbar/Navbar";
@@ -20,7 +20,18 @@ class App extends Component {
   async componentDidMount() {
     try{
       const user = await getCurrentUser();
-      this.setState({username: user.username});
+      // The Cognito username is the `sub` (a UUID) for email-alias user pools,
+      // so read the email attribute for display. Fall back to the login id,
+      // then the username, if attributes are unavailable.
+      let email;
+      try {
+        const attributes = await fetchUserAttributes();
+        email = attributes.email;
+      } catch (attrErr) {
+        console.log("Could not fetch user attributes: ", attrErr);
+      }
+      const displayName = email || user.signInDetails?.loginId || user.username;
+      this.setState({username: displayName});
     } catch (err) {
       console.log("ERROR : ", err);
     }

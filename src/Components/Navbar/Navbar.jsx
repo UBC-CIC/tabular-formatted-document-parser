@@ -40,7 +40,7 @@ class Navbar extends Component {
 
                             </Grid.Column>
                             <Grid.Column width={4} verticalAlign={"middle"} className={"navbar-column"}>
-                                <h3>Welcome, {username}!</h3>
+                                <h3>user: {username}</h3>
                             </Grid.Column>
                             <Grid.Column width={4}>
 
