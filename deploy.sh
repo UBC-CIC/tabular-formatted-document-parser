@@ -20,7 +20,7 @@ sam deploy \
     --no-fail-on-empty-changeset
 
 echo "==> Generating frontend config (src/aws-exports.js)"
-./generate_config.sh "${STACK_NAME}"
+./generate_config.sh "${STACK_NAME}" "${REGION}"
 
 echo "==> Building frontend"
 npm ci

@@ -4,12 +4,14 @@
 set -euo pipefail
 
 STACK_NAME="${1:-uottextract}"
+REGION_ARG="${2:-}"
 
 echo "Reading outputs from stack: ${STACK_NAME}"
 
 get_output() {
   aws cloudformation describe-stacks \
     --stack-name "${STACK_NAME}" \
+    ${REGION_ARG:+--region "${REGION_ARG}"} \
     --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" \
     --output text
 }
