@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+# vite
+node_modules/.vite
+*.local
+
 # testing
 /coverage
 
