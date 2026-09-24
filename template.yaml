@@ -73,7 +73,6 @@ Resources:
   AuthRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${AppName}-authRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -124,7 +123,6 @@ Resources:
   UnauthRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub '${AppName}-unauthRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:

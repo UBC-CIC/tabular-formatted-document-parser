@@ -13,7 +13,7 @@ sam build
 sam deploy \
     --stack-name "${STACK_NAME}" \
     --region "${REGION}" \
-    --capabilities CAPABILITY_NAMED_IAM \
+    --capabilities CAPABILITY_IAM \
     --resolve-image-repos \
     --resolve-s3 \
     --no-confirm-changeset \
