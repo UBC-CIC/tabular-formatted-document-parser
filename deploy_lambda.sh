@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 if [[ ! -f "./amplify/.config/project-config.json" ]]; then
     echo 'Project file does not exist'
@@ -24,14 +25,21 @@ if [ -z "$DYNAMO_TABLE" ]; then
 fi
 echo "DynamoDb Table: ${DYNAMO_TABLE}"
 
-echo "Creating Lambda Package"
+echo "Building Lambda container image"
+# Builds the container image defined by the function's Metadata (Dockerfile /
+# DockerContext) and tags it locally.
+sam build
 
-./create_package.sh
-
-sam package --s3-bucket ${S3_BUCKET} --output-template-file out.yaml
-sam deploy --template-file out.yaml --capabilities CAPABILITY_IAM --stack-name "${PROJECT_NAME}Lambda" --parameter-overrides ParameterKey=s3Bucket,ParameterValue="${S3_BUCKET}" ParameterKey=DynamoDbTable,ParameterValue="${DYNAMO_TABLE}"
-
-rm package.zip
+echo "Deploying stack"
+# --resolve-image-repos lets SAM create and manage the ECR repository for the
+# image function automatically (via its managed bootstrap stack), so no ECR
+# repo has to be created by hand.
+sam deploy \
+    --stack-name "${PROJECT_NAME}Lambda" \
+    --capabilities CAPABILITY_IAM \
+    --resolve-image-repos \
+    --no-confirm-changeset \
+    --parameter-overrides "s3Bucket=${S3_BUCKET}" "DynamoDbTable=${DYNAMO_TABLE}"
 
 LAMBDA_ARN=$(aws cloudformation describe-stacks --stack-name "${PROJECT_NAME}Lambda" --query "Stacks[0].Outputs[?OutputKey=='PdfToCsvArn'].OutputValue" --output text)
 if [ -z "$LAMBDA_ARN" ]; then
