@@ -19,7 +19,7 @@ From the project root:
 ./deploy.sh [stack-name] [aws-region]
 ```
 
-Defaults: stack name `uottextract`, region `ca-central-1`.
+Defaults: stack name `uottextract`, region `us-west-2`.
 
 The script performs the full deployment:
 

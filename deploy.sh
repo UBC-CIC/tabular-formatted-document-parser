@@ -6,7 +6,7 @@
 set -euo pipefail
 
 STACK_NAME="${1:-uottextract}"
-REGION="${2:-ca-central-1}"
+REGION="${2:-us-west-2}"
 
 echo "==> Building and deploying backend stack '${STACK_NAME}' in ${REGION}"
 sam build
