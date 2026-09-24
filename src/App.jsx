@@ -3,7 +3,7 @@ import { withAuthenticator } from '@aws-amplify/ui-react';
 import React, {Component} from 'react';
 import { connect } from "react-redux";
 import { Grid } from 'semantic-ui-react'
-import {Auth} from 'aws-amplify';
+import { getCurrentUser } from 'aws-amplify/auth';
 import S3Upload from "./Components/S3Upload/S3Upload";
 import S3Table from "./Components/S3Table/S3Table";
 import Navbar from "./Components/Navbar/Navbar";
@@ -19,7 +19,7 @@ class App extends Component {
 
   async componentDidMount() {
     try{
-      const user = await Auth.currentAuthenticatedUser();
+      const user = await getCurrentUser();
       this.setState({username: user.username});
     } catch (err) {
       console.log("ERROR : ", err);

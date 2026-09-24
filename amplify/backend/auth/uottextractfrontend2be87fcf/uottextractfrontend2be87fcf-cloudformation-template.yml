@@ -217,8 +217,8 @@ Resources:
         ZipFile: !Join 
           - |+
           - - 'const response = require(''cfn-response'');'
-            - 'const aws = require(''aws-sdk'');'
-            - 'const identity = new aws.CognitoIdentityServiceProvider();'
+            - 'const { CognitoIdentityProviderClient, DescribeUserPoolClientCommand } = require(''@aws-sdk/client-cognito-identity-provider'');'
+            - 'const identity = new CognitoIdentityProviderClient();'
             - 'exports.handler = (event, context, callback) => {'
             - ' if (event.RequestType == ''Delete'') { '
             - '   response.send(event, context, response.SUCCESS, {})'
@@ -228,7 +228,7 @@ Resources:
             - '     ClientId: event.ResourceProperties.clientId,'
             - '     UserPoolId: event.ResourceProperties.userpoolId'
             - '   };'
-            - '   identity.describeUserPoolClient(params).promise()'
+            - '   identity.send(new DescribeUserPoolClientCommand(params))'
             - '     .then((res) => {'
             - '       response.send(event, context, response.SUCCESS, {''appSecret'': res.UserPoolClient.ClientSecret});'   
             - '     })'
@@ -238,7 +238,7 @@ Resources:
             - ' }'
             - '};'
       Handler: index.handler
-      Runtime: nodejs10.x
+      Runtime: nodejs18.x
       Timeout: '300'
       Role: !GetAtt 
         - UserPoolClientRole

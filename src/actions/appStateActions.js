@@ -1,6 +1,8 @@
-import { API, graphqlOperation } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
 import {createStatus, updateStatus} from "../graphql/mutations";
 import { getStatus } from '../graphql/queries';
+
+const client = generateClient();
 
 
 
@@ -10,7 +12,7 @@ import { getStatus } from '../graphql/queries';
 export const addProcessingStatus = (payload) => {
     return (dispatch) => {
         dispatch({type: "ADD_PROCESSING_STATUS", payload: payload});
-        API.graphql(graphqlOperation(createStatus, {input: payload})).then().catch((err) => {
+        client.graphql({ query: createStatus, variables: { input: payload } }).then().catch((err) => {
             console.log("Error creating new processing status: ", err);
         })
     }
@@ -22,7 +24,7 @@ export const addProcessingStatus = (payload) => {
 export const updateProcessingStatus = (payload) => {
     return (dispatch) => {
         dispatch({type: "UPDATE_PROCESSING_STATUS", payload: payload});
-        API.graphql(graphqlOperation(updateStatus, {input: payload})).then().catch((err) => {
+        client.graphql({ query: updateStatus, variables: { input: payload } }).then().catch((err) => {
             console.log("Error creating new processing status: ", err);
         })
     }
@@ -33,7 +35,7 @@ export const updateProcessingStatus = (payload) => {
 // Fetch processing status
 export const fetchStatus = (payload) => {
     return (dispatch) => {
-        API.graphql(graphqlOperation(getStatus, {id: payload.id})).then((response) => {
+        client.graphql({ query: getStatus, variables: { id: payload.id } }).then((response) => {
             const status = response.data.getStatus;
             dispatch(fetchStatusSuccess(status));
         }).catch((err) => {

@@ -1,16 +1,17 @@
 import React, {Component} from 'react';
 import { Grid } from 'semantic-ui-react';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import IconButton from '@material-ui/core/IconButton';
-import { Auth } from "aws-amplify";
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import IconButton from '@mui/material/IconButton';
+import { signOut } from "aws-amplify/auth";
+import awsLogo from '../../assets/images/PB_AWS_logo_RGB_stacked.png';
 import "./Navbar.css";
 
 
 
 class Navbar extends Component {
 
-    onSignOut = () => {
-        Auth.signOut();
+    onSignOut = async () => {
+        await signOut();
         window.location.reload();
     }
 
@@ -30,7 +31,7 @@ class Navbar extends Component {
                                                 </div>
                                             </Grid.Column>
                                             <Grid.Column>
-                                                <img src={require('../../assets/images/PB_AWS_logo_RGB_stacked.png').default} className={"aws-image"} alt={"..."}/>
+                                                <img src={awsLogo} className={"aws-image"} alt={"..."}/>
                                             </Grid.Column>
                                         </Grid.Row>
                                     </Grid>
