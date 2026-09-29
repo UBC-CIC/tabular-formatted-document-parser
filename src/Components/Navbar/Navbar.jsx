@@ -1,16 +1,17 @@
 import React, {Component} from 'react';
 import { Grid } from 'semantic-ui-react';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import IconButton from '@material-ui/core/IconButton';
-import { Auth } from "aws-amplify";
+import { ExitToApp as ExitToAppIcon } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
+import { signOut } from "aws-amplify/auth";
+import awsLogo from '../../assets/images/PB_AWS_logo_RGB_stacked.png';
 import "./Navbar.css";
 
 
 
 class Navbar extends Component {
 
-    onSignOut = () => {
-        Auth.signOut();
+    onSignOut = async () => {
+        await signOut();
         window.location.reload();
     }
 
@@ -30,7 +31,7 @@ class Navbar extends Component {
                                                 </div>
                                             </Grid.Column>
                                             <Grid.Column>
-                                                <img src={require('../../assets/images/PB_AWS_logo_RGB_stacked.png').default} className={"aws-image"} alt={"..."}/>
+                                                <img src={awsLogo} className={"aws-image"} alt={"..."}/>
                                             </Grid.Column>
                                         </Grid.Row>
                                     </Grid>
@@ -39,7 +40,7 @@ class Navbar extends Component {
 
                             </Grid.Column>
                             <Grid.Column width={4} verticalAlign={"middle"} className={"navbar-column"}>
-                                <h3>Welcome, {username}!</h3>
+                                <h3>user: {username}</h3>
                             </Grid.Column>
                             <Grid.Column width={4}>
 

@@ -1,6 +1,6 @@
 import boto3 
 import botocore 
-from PyPDF4 import PdfFileReader, PdfFileWriter
+from pypdf import PdfReader, PdfWriter
 import pdf2image 
 import time 
 import json
@@ -18,11 +18,11 @@ DYNAMOTABLE= os.getenv('DYNAMO_TABLE_NAME')
 def get_pages(pdf_path, pages, output_path):
     logger.info(f'Getting Pages {pages}')
     logger.info(f'{pdf_path} to {output_path}')
-    pdf_reader = PdfFileReader(pdf_path)
-    pdf_writer = PdfFileWriter()
+    pdf_reader = PdfReader(pdf_path)
+    pdf_writer = PdfWriter()
     if not pages or pages[0] == '': 
         # if user has not specified page numbers, extract from all pages
-        for page in range(pdf_reader.getNumPages()):
+        for page in range(len(pdf_reader.pages)):
             write_page(pdf_reader, pdf_writer, page)
     else: 
         # otherwise process the page numbers 
@@ -39,8 +39,8 @@ def get_pages(pdf_path, pages, output_path):
         pdf_writer.write(out)
 
 def write_page(reader, writer, page):
-    pg = reader.getPage(page)
-    writer.addPage(pg)
+    pg = reader.pages[page]
+    writer.add_page(pg)
     logger.info(f'Appending Page#{page}')
 
 def convert_to_imgs(pdf_path):
@@ -49,7 +49,7 @@ def convert_to_imgs(pdf_path):
         content = f.read()
     logger.info(content[:1500])
     folder_path = '/tmp/'
-    file_names = pdf2image.convert_from_bytes(content, dpi=500, poppler_path='poppler_binaries/', output_folder=folder_path, fmt='JPEG', paths_only=True)
+    file_names = pdf2image.convert_from_bytes(content, dpi=500, output_folder=folder_path, fmt='JPEG', paths_only=True)
     logger.info(f'PDFs are {glob.glob(folder_path+"*.pdf")}')
     logger.info(f'Images are {file_names}')
     return file_names 
@@ -81,7 +81,7 @@ def get_s3_object(bucket, key, filename):
     try:    
         with open(filename, 'wb') as f:
             s3_client.download_fileobj(bucket, key, f)
-    except ClientError as e: 
+    except botocore.exceptions.ClientError as e: 
         raise e 
 
 def get_json_s3(bucket, key):

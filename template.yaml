@@ -1,49 +1,378 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-    "Dicom Lambda Validation \n"
+  Textract Tabular Formatted Parser - full stack (Cognito, S3, DynamoDB,
+  Status API, PDF->CSV Textract Lambda, and S3+CloudFront hosting).
+
 Parameters:
-  s3Bucket:
+  AppName:
     Type: String
-  DynamoDbTable:
-    Type: String
+    Default: uottextract
+    Description: Prefix used when naming resources.
 
 Globals:
   Function:
-    AutoPublishAlias: live
-    Handler: index.handler
-    MemorySize: 768
-    Runtime: python3.8
-    Timeout: 300
+    Timeout: 30
     Tracing: Active
-    
 
 Resources:
-  PdfToCsv:
-    Type: AWS::Serverless::Function 
+
+  # ===================================================================
+  # Auth - Cognito User Pool, App Client (public SPA, no secret),
+  # Identity Pool, and authenticated / unauthenticated IAM roles.
+  # ===================================================================
+  UserPool:
+    Type: AWS::Cognito::UserPool
     Properties:
-      CodeUri: ./package.zip
+      UserPoolName: !Sub '${AppName}-user-pool'
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      MfaConfiguration: 'OFF'
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub '${AppName}-app-client'
+      UserPoolId: !Ref UserPool
+      # Public SPA client: no secret.
+      GenerateSecret: false
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        RefreshToken: days
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      ReadAttributes:
+        - email
+      WriteAttributes:
+        - email
+
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !Sub '${AppName}_identity_pool'
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !GetAtt UserPool.ProviderName
+
+  AuthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+        - PolicyName: s3-user-scoped-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Identity-scoped object access (matches Amplify accessLevel
+              # semantics: protected/{sub}, private/{sub}, uploads, public).
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                Resource:
+                  - !Sub 'arn:aws:s3:::${DataBucket}/public/*'
+                  - !Sub 'arn:aws:s3:::${DataBucket}/uploads/*'
+                  - !Sub 'arn:aws:s3:::${DataBucket}/protected/${!cognito-identity.amazonaws.com:sub}/*'
+                  - !Sub 'arn:aws:s3:::${DataBucket}/private/${!cognito-identity.amazonaws.com:sub}/*'
+              # Read any protected object (matches previous read policy).
+              - Effect: Allow
+                Action: 's3:GetObject'
+                Resource: !Sub 'arn:aws:s3:::${DataBucket}/protected/*'
+              # Scoped ListBucket.
+              - Effect: Allow
+                Action: 's3:ListBucket'
+                Resource: !Sub 'arn:aws:s3:::${DataBucket}'
+                Condition:
+                  StringLike:
+                    's3:prefix':
+                      - 'public/'
+                      - 'public/*'
+                      - 'protected/'
+                      - 'protected/*'
+                      - 'private/${!cognito-identity.amazonaws.com:sub}/'
+                      - 'private/${!cognito-identity.amazonaws.com:sub}/*'
+
+  UnauthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': unauthenticated
+      Policies:
+        - PolicyName: deny-all
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Deny
+                Action: '*'
+                Resource: '*'
+
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt AuthRole.Arn
+        unauthenticated: !GetAtt UnauthRole.Arn
+
+  # ===================================================================
+  # Data - S3 bucket (uploads + generated CSVs) and DynamoDB status table.
+  # ===================================================================
+  DataBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    DependsOn: PdfToCsvS3InvokePermission
+    Properties:
+      BucketName: !Sub '${AppName}-data-${AWS::AccountId}-${AWS::Region}'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD, PUT, POST, DELETE]
+            AllowedOrigins: ['*']
+            ExposedHeaders:
+              - x-amz-server-side-encryption
+              - x-amz-request-id
+              - x-amz-id-2
+              - ETag
+            MaxAge: 3000
+      NotificationConfiguration:
+        LambdaConfigurations:
+          # Trigger PdfToCsv when a file_info JSON is written.
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt PdfToCsv.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .json
+
+  StatusTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    Properties:
+      TableName: !Sub '${AppName}-status'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expirationTime
+        Enabled: true
+
+  # ===================================================================
+  # PDF -> CSV processing Lambda (container image).
+  # ===================================================================
+  PdfToCsv:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      MemorySize: 768
+      Timeout: 300
+      AutoPublishAlias: live
       Policies:
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
         - TextractPolicy: {}
         - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDbTable
+            TableName: !Ref StatusTable
         - S3CrudPolicy:
-            BucketName: !Ref s3Bucket
+            BucketName: !Sub '${AppName}-data-${AWS::AccountId}-${AWS::Region}'
       Environment:
         Variables:
-          BUCKET_NAME: !Ref s3Bucket
-          DYNAMO_TABLE_NAME: !Ref DynamoDbTable
+          BUCKET_NAME: !Sub '${AppName}-data-${AWS::AccountId}-${AWS::Region}'
+          DYNAMO_TABLE_NAME: !Ref StatusTable
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: python3.13-v1
 
-  LambdaInvokePermission:
-    Type: 'AWS::Lambda::Permission'
+  PdfToCsvS3InvokePermission:
+    Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !GetAtt PdfToCsv.Arn
       Action: 'lambda:InvokeFunction'
       Principal: s3.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
-      SourceArn: !Sub 'arn:aws:s3:::${s3Bucket}'
+      SourceArn: !Sub 'arn:aws:s3:::${AppName}-data-${AWS::AccountId}-${AWS::Region}'
+
+  # ===================================================================
+  # Status API - API Gateway (Cognito authorizer) + Lambda + DynamoDB.
+  # Replaces the former AppSync GraphQL `Status` model.
+  # ===================================================================
+  StatusApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,PATCH,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+
+  StatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: status-api/
+      Handler: index.handler
+      Runtime: nodejs20.x
+      MemorySize: 256
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref StatusTable
+      Environment:
+        Variables:
+          DYNAMO_TABLE_NAME: !Ref StatusTable
+      Events:
+        CreateStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StatusApi
+            Path: /status
+            Method: post
+        GetStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StatusApi
+            Path: /status/{id}
+            Method: get
+        UpdateStatus:
+          Type: Api
+          Properties:
+            RestApiId: !Ref StatusApi
+            Path: /status/{id}
+            Method: patch
+
+  # ===================================================================
+  # Frontend hosting - private S3 bucket fronted by CloudFront (OAC).
+  # ===================================================================
+  HostingBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub '${AppName}-hosting-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  HostingOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AppName}-hosting-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  HostingDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: HostingS3Origin
+            DomainName: !GetAtt HostingBucket.RegionalDomainName
+            OriginAccessControlId: !Ref HostingOAC
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: HostingS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          # AWS managed CachingOptimized policy.
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+        CustomErrorResponses:
+          # SPA routing: serve index.html for client-side routes.
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        PriceClass: PriceClass_100
+
+  HostingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref HostingBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${HostingBucket}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${HostingDistribution}'
 
 Outputs:
+  Region:
+    Value: !Ref 'AWS::Region'
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  IdentityPoolId:
+    Value: !Ref IdentityPool
+  DataBucketName:
+    Value: !Ref DataBucket
+  StatusApiEndpoint:
+    Value: !Sub 'https://${StatusApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
+  StatusTableName:
+    Value: !Ref StatusTable
   PdfToCsvArn:
-      Value: !GetAtt PdfToCsv.Arn
+    Value: !GetAtt PdfToCsv.Arn
+  HostingBucketName:
+    Value: !Ref HostingBucket
+  CloudFrontDistributionId:
+    Value: !Ref HostingDistribution
+  CloudFrontDomainName:
+    Value: !GetAtt HostingDistribution.DomainName

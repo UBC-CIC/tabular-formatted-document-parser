@@ -1,9 +1,7 @@
 import React from "react";
 import {connect} from "react-redux";
-import { Alert } from '@material-ui/lab';
-import {Snackbar} from "@material-ui/core";
-import IconButton from "@material-ui/core/IconButton";
-import CloseIcon from '@material-ui/icons/Close';
+import { Alert, Snackbar, IconButton } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 import {removeAppNotification} from "../../actions/notificationActions";
 

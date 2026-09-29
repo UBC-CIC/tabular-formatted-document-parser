@@ -1,49 +1,67 @@
 # Deployment Guide
-Before deployment, you should have the following: 
 
-* An AWS account with required permissions. If you do not have an AWS account, create and activate one.
-* Access to Git.
-* Docker installed
-* AWS CLI installed
-* AWS SAM installed
-* Amplify CLI installed
-* Bash terminal
-* GitHub Account 
+This application deploys entirely through **AWS SAM / CloudFormation** — no Amplify CLI is required. A single `template.yaml` provisions all backend resources (Cognito, S3, DynamoDB, the Status API, and the PDF→CSV Lambda) plus the S3 + CloudFront frontend hosting.
 
-## Deployment steps
+## Prerequisites
 
-1.	**Clone** and **Fork** this solution repository.
-3.	If you haven't configured Amplify before, configure the Amplify CLI in your terminal as follows:
+* An AWS account with permissions to create the resources in `template.yaml` (Cognito, S3, DynamoDB, Lambda, API Gateway, CloudFront, IAM).
+* AWS CLI installed and configured with credentials (`aws configure`).
+* AWS SAM CLI installed.
+* Docker installed and running (required by `sam build` to build the PDF→CSV Lambda container image).
+* Node.js and npm installed (to build the React frontend).
+* A Bash terminal.
 
-```bash
-amplify configure
-```
+## One-command deployment
 
-4.	In a terminal from the project root directory, enter the following command selecting the IAM user of the AWS Account you will deploy this application from. (accept all defaults):
+From the project root:
 
 ```bash
-amplify init
+./deploy.sh [stack-name] [aws-region]
 ```
 
-5.	Next, after the Amplify project has been initialized, in your terminal again from the project root directory, enter the following command (select "Yes" for all options):
+Defaults: stack name `uottextract`, region `us-west-2`.
 
-```
-amplify push
-```
+The script performs the full deployment:
 
-6.	After amplify successfully creates all the backend resource, execute the following command to deploy the Lambda function that pre and pos process the PDF files. This script automates the following steps:
-a.	Identify the AWS resources AWS Amplify created
-b.	Package and deploy the AWS Lambda function with all required libraries using Docker and SAM
-c.	Configures the Amazon S3 event notification to the AWS Lambda Function
+1. `sam build` — builds the PDF→CSV Lambda container image and the Status API function.
+2. `sam deploy` — creates/updates the CloudFormation stack (all backend resources + hosting bucket + CloudFront). The ECR repository for the image function and the SAM deployment bucket are created and managed automatically (`--resolve-image-repos`, `--resolve-s3`).
+3. `./generate_config.sh` — reads the stack outputs and writes `src/aws-exports.js` (the Amplify client configuration: Cognito, S3, and the Status API endpoint).
+4. `npm ci && npm run build` — builds the React frontend (Vite) into `./build`.
+5. `aws s3 sync build/ …` — publishes the build to the hosting bucket.
+6. `aws cloudfront create-invalidation …` — invalidates the CloudFront cache.
+
+On completion the script prints the CloudFront URL (`https://<distribution>.cloudfront.net`) where the app is served.
+
+> **First run:** if this is the first SAM deployment in your account/region, SAM will bootstrap its managed resources. If `sam deploy` prompts for configuration, run `sam deploy --guided` once to seed a `samconfig.toml`, then re-run `./deploy.sh`.
+
+## Creating a user
+
+The Cognito User Pool has no users initially and self-signup is available through the app's login screen (Amplify's `withAuthenticator`). Alternatively, create a user via the CLI:
 
 ```bash
-deploy_lambda.sh
+aws cognito-idp admin-create-user \
+  --user-pool-id <UserPoolId-from-stack-outputs> \
+  --username user@example.com \
+  --user-attributes Name=email,Value=user@example.com Name=email_verified,Value=true
 ```
 
-7.	Next, in your browser go to the AWS Amplify service page in the AWS Console. Select the app you just created.
-8.	Next, click on the "frontend environments" tab and select "Github" under the "Host a web app" section then click Connect branch.
-9.	Select the repository that contains the fork of this project. Click Next.
-10.	From the Select a backend environment dropdown, select dev.
-11.	Next, click on the Create a new role button and accept all defaults. Now click the refresh button and select the role you just created in the dropdown menu. Click Next.
-12.	Click Save and deploy.
-13.	Wait until the Provision, Build, Deploy and Verify indicators are all green.
+## Redeploying frontend-only changes
+
+If you only changed frontend code, you can skip the backend build and just rebuild + republish:
+
+```bash
+npm run build
+aws s3 sync build/ "s3://<HostingBucketName>/" --delete
+aws cloudfront create-invalidation --distribution-id <CloudFrontDistributionId> --paths "/*"
+```
+
+## Tearing down
+
+Because this is a prototype with disposable data, the S3 buckets and DynamoDB table use `DeletionPolicy: Delete`. To remove everything:
+
+```bash
+# Empty the buckets first (CloudFormation cannot delete non-empty buckets).
+aws s3 rm "s3://<DataBucketName>" --recursive
+aws s3 rm "s3://<HostingBucketName>" --recursive
+sam delete --stack-name <stack-name>
+```

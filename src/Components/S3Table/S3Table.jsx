@@ -1,27 +1,30 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { Storage } from "aws-amplify";
+import { list, downloadData, remove } from "aws-amplify/storage";
 import { Grid, Divider } from "semantic-ui-react";
-import RefreshIcon from '@material-ui/icons/Refresh';
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
-import GetAppIcon from '@material-ui/icons/GetApp';
-import DeleteOutlineIcon from '@material-ui/icons/DeleteOutline';
-import IconButton from '@material-ui/core/IconButton';
+import {
+    Refresh as RefreshIcon,
+    DeleteForever as DeleteForeverIcon,
+    GetApp as GetAppIcon,
+    DeleteOutline as DeleteOutlineIcon,
+} from '@mui/icons-material';
 import {enqueueAppNotification} from "../../actions/notificationActions";
 
 import "./S3Table.css";
 import {processingFinished, fetchStatus} from "../../actions/appStateActions";
-import {withStyles} from "@material-ui/core/styles";
-import {Tooltip} from "@material-ui/core";
+import { styled } from "@mui/material/styles";
+import { Tooltip, tooltipClasses, IconButton } from "@mui/material";
 
-const TextOnlyTooltip = withStyles({
-    tooltip: {
+const TextOnlyTooltip = styled(({ className, ...props }) => (
+    <Tooltip {...props} classes={{ popper: className }} />
+))({
+    [`& .${tooltipClasses.tooltip}`]: {
         color: "black",
         backgroundColor: "lightgray",
         opacity: 0.5,
         fontSize: "1em"
     }
-})(Tooltip);
+});
 
 class S3Table extends Component {
     constructor(props) {
@@ -100,10 +103,11 @@ class S3Table extends Component {
             refreshBtnDisabled: true,
         })
         const that = this;
-        Storage.list('csv/', { level: 'protected' })
+        list({ prefix: 'csv/', options: { accessLevel: 'protected' } })
             .then(result => {
-                for (var i in result) {
-                    const name = result[i].key.replace("csv/","");
+                const items = result.items || [];
+                for (var i in items) {
+                    const name = items[i].key.replace("csv/","");
                     let keyWithoutExt = name.replace(".csv", "");
                     let keyExtIndex = keyWithoutExt.lastIndexOf("-");
                     let key = keyWithoutExt.concat(".").concat(keyWithoutExt.substring(keyExtIndex + 1));
@@ -114,8 +118,8 @@ class S3Table extends Component {
                     let firstSegment = sourceNameWithExt.substr(0, sourceExtIndex);
                     let lastSegment = sourceNameWithExt.substr(sourceExtIndex + 1);
                     let source = firstSegment + "." + lastSegment;
-                    const date = (result[i].lastModified).toUTCString();
-                    const obj = { name: name, source: source, key: key, last_modified: date, size: result[i].size };
+                    const date = (items[i].lastModified).toUTCString();
+                    const obj = { name: name, source: source, key: key, last_modified: date, size: items[i].size };
                     fileList.push(obj);
                 }
                 fileList.sort((a,b) => Date.parse(b.last_modified) - Date.parse(a.last_modified));
@@ -159,8 +163,10 @@ class S3Table extends Component {
             return a;
         }
 
-        return Storage.get("csv/"+key, { download: true, level: "protected" })
-            .then(res => downloadBlob(res.Body, key)) // derive downloadFileName from fileKey if you wish
+        return downloadData({ key: "csv/"+key, options: { accessLevel: "protected" } })
+            .result
+            .then(res => res.body.blob())
+            .then(blob => downloadBlob(blob, key)) // derive downloadFileName from fileKey if you wish
             .catch(err => {
                 console.log(err);
                 alert("File not ready yet!")
@@ -168,7 +174,7 @@ class S3Table extends Component {
     }
 
     async removeData(key) {
-        Storage.remove("csv/"+key, { level: 'protected' })
+        remove({ key: "csv/"+key, options: { accessLevel: 'protected' } })
             .then()
             .catch(err => console.log(err));
         var arr = [...this.state.files];

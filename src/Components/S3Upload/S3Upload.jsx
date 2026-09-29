@@ -1,23 +1,28 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import {Storage } from "aws-amplify";
-import {Tooltip} from "@material-ui/core";
-import {withStyles} from "@material-ui/core/styles";
+import { uploadData } from "aws-amplify/storage";
+import {
+    Tooltip,
+    tooltipClasses,
+    IconButton,
+    Button,
+    LinearProgress,
+    Typography,
+    Box,
+    RadioGroup,
+    Radio,
+    FormControl,
+    FormControlLabel,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { v4 as uuid } from 'uuid';
 import {Grid, Divider} from "semantic-ui-react";
-import HelpIcon from '@material-ui/icons/Help';
-import IconButton from '@material-ui/core/IconButton';
-import CloudUploadIcon from '@material-ui/icons/CloudUpload';
-import ReportProblemIcon from '@material-ui/icons/ReportProblem';
+import {
+    Help as HelpIcon,
+    CloudUpload as CloudUploadIcon,
+    ReportProblem as ReportProblemIcon,
+} from '@mui/icons-material';
 import "./S3Upload.css";
-import Button from "@material-ui/core/Button";
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import RadioGroup from "@material-ui/core/RadioGroup";
-import Radio from "@material-ui/core/Radio";
-import FormControl from "@material-ui/core/FormControl";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
 import {initiateProcessing, clearProcessingState, addProcessingStatus, updateProcessingStatus, processingFinished} from "../../actions/appStateActions";
 import {enqueueAppNotification} from "../../actions/notificationActions";
 
@@ -25,14 +30,16 @@ import {enqueueAppNotification} from "../../actions/notificationActions";
 
 
 
-const TextOnlyTooltip = withStyles({
-    tooltip: {
+const TextOnlyTooltip = styled(({ className, ...props }) => (
+    <Tooltip {...props} classes={{ popper: className }} />
+))({
+    [`& .${tooltipClasses.tooltip}`]: {
         color: "black",
         backgroundColor: "lightgray",
         opacity: 0.5,
         fontSize: "1em"
     }
-})(Tooltip);
+});
 
 
 
@@ -181,16 +188,20 @@ class S3Upload extends Component {
         const key = `${keyName}${extension && '.'}${extension}`;
         addProcessingStatus({id: key, status: "Uploading", expirationTime: Math.floor(new Date().getTime()/1000.0) + 604800});
         const thisState = this;
-        Storage.put(key, file, {
-            progressCallback(progress) {
-                if (((progress.loaded/progress.total)*100) <= 50) {
-                    thisState.setState({
-                        loadingProgress: (progress.loaded/progress.total)*100,
-                    });
-                }
+        uploadData({
+            key: key,
+            data: file,
+            options: {
+                accessLevel: visibility,
+                onProgress({ transferredBytes, totalBytes }) {
+                    if (totalBytes && ((transferredBytes/totalBytes)*100) <= 50) {
+                        thisState.setState({
+                            loadingProgress: (transferredBytes/totalBytes)*100,
+                        });
+                    }
+                },
             },
-            level: visibility,
-        }).then(
+        }).result.then(
             (result) => {
                 info = {
                     key: result.key,
@@ -200,7 +211,11 @@ class S3Upload extends Component {
                     file_type: mimeType
                 }
                 updateProcessingStatus({id: key, status: "Processing"});
-                Storage.put(`file_info/${keyName}.json`, JSON.stringify(info), { level: visibility, contentType: 'json' })
+                return uploadData({
+                    key: `file_info/${keyName}.json`,
+                    data: JSON.stringify(info),
+                    options: { accessLevel: visibility, contentType: 'json' },
+                }).result;
             },
             (err) => {
                 updateProcessingStatus({id: key, status: "Error", errorMessage: "File processing error occurred: " + err.message});

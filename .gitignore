@@ -5,6 +5,13 @@
 /.pnp
 .pnp.js
 
+# vite
+node_modules/.vite
+*.local
+
+# SAM build output
+.aws-sam/
+
 # testing
 /coverage
 
